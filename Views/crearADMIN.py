@@ -1,4 +1,5 @@
 import flet as ft
+import usuarios
 from flet import Icons, Colors
 
 def main(page: ft.Page):
@@ -20,11 +21,10 @@ def main(page: ft.Page):
         page.update()
 
     def on_drawer_item_click(e):
-        # Para demo: imprimir el ítem pulsado
         if isinstance(e.control.title, ft.Text):
-            print(f"Clicked: {e.control.title.value}")
-        else:
-            print(f"Clicked: {e.control.title}")
+            title = e.control.title.value
+            if title == "Inicio":
+                usuarios.main(page)
         page.drawer.open = False
         page.update()
 

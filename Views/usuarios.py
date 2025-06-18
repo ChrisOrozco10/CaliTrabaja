@@ -163,22 +163,22 @@ def main(page: ft.Page):
                 # Campos de texto
                 ft.Row([
                     ft.Text("ID usuario", expand=True, color=TEXT_COLOR, size=14,weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12),
+                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
                 ft.Row([
                     ft.Text("Nombre", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12),
+                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
                 ft.Row([
                     ft.Text("Apellido", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12),
+                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
                 ft.Row([
                     ft.Text("Correo", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12),
+                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
                 # Rol
@@ -191,6 +191,7 @@ def main(page: ft.Page):
                             ft.dropdown.Option("Cliente"),
                         ],
                         text_size=12,
+                        border_radius=5,
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
@@ -204,6 +205,7 @@ def main(page: ft.Page):
                             ft.dropdown.Option("Inactivo"),
                         ],
                         text_size=12,
+                        border_radius=5,
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
@@ -217,6 +219,7 @@ def main(page: ft.Page):
                             ft.dropdown.Option("Ninguna"),
                         ],
                         text_size=12,
+                        border_radius=5,
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
@@ -230,6 +233,7 @@ def main(page: ft.Page):
                             ft.dropdown.Option("Ninguno"),
                         ],
                         text_size=12,
+                        border_radius=5,
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
 
@@ -251,10 +255,12 @@ def main(page: ft.Page):
                             ft.dropdown.Option("Gasodomésticos"),
                         ],
                         text_size=12,
+                        border_radius=5,
                     ),
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ],
             spacing=8,
+            # Eliminado vertical_alignment de aquí, ya que no es un argumento válido para ft.Column
         ),
         padding=12,
         bgcolor=CARD_BACKGROUND,
@@ -417,36 +423,44 @@ def main(page: ft.Page):
     tarjetas_container = ft.Row(spacing=20, expand=True)
 
     def actualizar_tarjetas():
-        # Tomar un slice circular para soportar bucle infinito
         visible = []
         total = len(tarjetas)
-        for i in range(VISIBLE_CARDS):
-            visible.append(tarjetas[(start_index + i) % total])
+        if total > 0:
+            # Asegura que siempre haya suficientes tarjetas para llenar la vista o se repitan
+            # para el efecto de bucle.
+            # Para un deslizamiento de bloque, solo tomamos las tarjetas directamente.
+            for i in range(VISIBLE_CARDS):
+                visible.append(tarjetas[(start_index + i) % total])
         tarjetas_container.controls = visible
         page.update()
 
     def siguiente(e):
         nonlocal start_index
-        start_index = (start_index + VISIBLE_CARDS) % len(tarjetas)
-        actualizar_tarjetas()
+        total = len(tarjetas)
+        # Avanza VISIBLE_CARDS posiciones
+        if total > VISIBLE_CARDS:
+            start_index = (start_index + VISIBLE_CARDS) % total
+            actualizar_tarjetas()
 
     def anterior(e):
         nonlocal start_index
-        start_index = (start_index - VISIBLE_CARDS) % len(tarjetas)
-        actualizar_tarjetas()
+        total = len(tarjetas)
+        # Retrocede VISIBLE_CARDS posiciones
+        if total > VISIBLE_CARDS:
+            start_index = (start_index - VISIBLE_CARDS + total) % total
+            actualizar_tarjetas()
 
-    # Botones de navegación
-    btn_prev = ft.IconButton(icon=ft.Icons.ARROW_BACK, on_click=anterior)
-    btn_next = ft.IconButton(icon=ft.Icons.ARROW_FORWARD, on_click=siguiente)
-
-    # Primera carga de tarjetas
     actualizar_tarjetas()
+
+    btn_prev = ft.IconButton(icon=ft.Icons.ARROW_BACK_IOS_NEW, on_click=anterior, icon_size=40, icon_color=TEXT_COLOR)
+    btn_next = ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40, icon_color=TEXT_COLOR)
 
     carrusel = ft.Row([
         btn_prev,
         tarjetas_container,
         btn_next,
     ], spacing=10, alignment=ft.MainAxisAlignment.CENTER, expand=True)
+
 
     # --- Contenedor de reportes ---
     reportes_container = ft.Container(
@@ -476,6 +490,7 @@ def main(page: ft.Page):
         ],
         expand=True,
         spacing=20,
+        vertical_alignment=ft.CrossAxisAlignment.START # Asegura que todo el contenido del Row se alinee arriba
     )
 
     # --- Agregar todo a la página ---
@@ -487,4 +502,3 @@ def main(page: ft.Page):
 
 if __name__ == "__main__":
     ft.app(target=main)
-
