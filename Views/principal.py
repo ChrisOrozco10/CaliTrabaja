@@ -6,9 +6,9 @@ def main(page: ft.Page):
     }
     page.theme = ft.Theme(font_family="Oswald")
     page.title = "CaliTrabaja! - Bienvenida"
-    page.bgcolor = "#D9D9D9"
+    page.bgcolor = "#F7F7F7"
     page.window_width = 700
-    page.window_height = 450
+    page.window_height = 600
     page.window_resizable = False
 
     def abrir_login(e):

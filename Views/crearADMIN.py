@@ -10,6 +10,10 @@ def main(page: ft.Page):
     }
     PRIMARY_COLOR = "#2FBDB3"
     page.bgcolor = "white"
+    TEXT_COLOR = "#333333"
+    PRIMARY_COLOR = "#2FBDB3"
+    BACKGROUND_COLOR = "#FAFAFA"
+    CARD_BACKGROUND = "#FFFFFF"
     page.padding = 0
     page.spacing = 0
     page.window_width = 1920
@@ -32,7 +36,6 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
-    # ---------------------- DRAWER (MENÚ LATERAL) ----------------------
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
         controls=[
@@ -52,54 +55,30 @@ def main(page: ft.Page):
                             ),
                         ),
                         ft.ListTile(
-                            leading=ft.Icon(
-                                ft.Icons.HOME_OUTLINED, size=28, color=ft.Colors.BLACK
-                            ),
-                            title=ft.Text(
-                                "Inicio", font_family="Oswald", size=18, color=ft.Colors.BLACK
-                            ),
+                            leading=ft.Icon(ft.Icons.HOME_OUTLINED, size=28, color=TEXT_COLOR),
+                            title=ft.Text("Inicio", size=18, color=TEXT_COLOR),
                             on_click=on_drawer_item_click,
                         ),
                         ft.ListTile(
-                            leading=ft.Icon(
-                                ft.Icons.SETTINGS_OUTLINED, size=28, color=ft.Colors.BLACK
-                            ),
-                            title=ft.Text(
-                                "Configuración de cuenta",
-                                font_family="Oswald",
-                                size=18,
-                                color=ft.Colors.BLACK,
-                            ),
+                            leading=ft.Icon(ft.Icons.SETTINGS_OUTLINED, size=28, color=TEXT_COLOR),
+                            title=ft.Text("Configuración de cuenta", size=18, color=TEXT_COLOR),
                             on_click=on_drawer_item_click,
                         ),
                         ft.ListTile(
-                            leading=ft.Icon(
-                                ft.Icons.PERSON_ADD_OUTLINED, size=28, color=ft.Colors.BLACK
-                            ),
-                            title=ft.Text(
-                                "Crear Usuario Administrador",
-                                font_family="Oswald",
-                                size=18,
-                                color=ft.Colors.BLACK,
-                            ),
+                            leading=ft.Icon(ft.Icons.PERSON_ADD_OUTLINED, size=28, color=TEXT_COLOR),
+                            title=ft.Text("Crear Usuario Administrador", size=18, color=TEXT_COLOR),
                             on_click=on_drawer_item_click,
                         ),
                         ft.ListTile(
-                            leading=ft.Icon(
-                                ft.Icons.INFO_OUTLINE, size=28, color=ft.Colors.BLACK
-                            ),
-                            title=ft.Text(
-                                "Nosotros", font_family="Oswald", size=18, color=ft.Colors.BLACK
-                            ),
+                            leading=ft.Icon(ft.Icons.INFO_OUTLINE, size=28, color=TEXT_COLOR),
+                            title=ft.Text("Nosotros", size=18, color=TEXT_COLOR),
                             on_click=on_drawer_item_click,
                         ),
-                        ft.Container(expand=True),  # empuja el icono del sol al fondo
+                        ft.Container(expand=True),
                         ft.Container(
                             alignment=ft.alignment.bottom_right,
                             padding=ft.padding.only(right=10, bottom=10),
-                            content=ft.Icon(
-                                ft.Icons.WB_SUNNY_OUTLINED, size=32, color=ft.Colors.BLACK
-                            ),
+                            content=ft.Icon(ft.Icons.WB_SUNNY_OUTLINED, size=32, color=TEXT_COLOR),
                         ),
                     ],
                 ),
@@ -107,7 +86,6 @@ def main(page: ft.Page):
         ],
     )
 
-    # ---------------------- BARRA SUPERIOR ----------------------
     header = ft.Container(
         bgcolor="#F8F8F8",
         padding=ft.padding.only(left=30, right=30, top=15, bottom=15),
@@ -115,22 +93,20 @@ def main(page: ft.Page):
         content=ft.Row(
             spacing=20,
             controls=[
-                ft.IconButton(
-                    icon=ft.Icons.MENU, icon_color="#000000", on_click=open_drawer
-                ),
+                ft.IconButton(icon=ft.Icons.MENU, icon_color="#000000", on_click=open_drawer),
                 ft.Row(
-                    spacing=10,
+                    spacing=1,
                     controls=[
-                        ft.Image(src="../img/logo.png", width=32, height=32),
-                        ft.Text("Cali", color=PRIMARY_COLOR, size=20, font_family="Oswald"),
-                        ft.Text("Trabaja", color="#000000", size=20, font_family="Oswald"),
+                        ft.Image(src="../img/logo.jpg", width=82, height=82),
+                        ft.Text("Cali", color=PRIMARY_COLOR, size=40, font_family="Oswald"),
+                        ft.Text("Trabaja", color="#000000", size=40, font_family="Oswald"),
                     ],
                 ),
                 ft.Container(
                     expand=True,
                     alignment=ft.alignment.center_right,
                     content=ft.ElevatedButton(
-                        "Cerrar Sesion",
+                        "Cerrar Sesión",
                         bgcolor="#3EAEB1",
                         color="white",
                         style=ft.ButtonStyle(

@@ -43,8 +43,6 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
-
-    # --- Drawer ---
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
         controls=[
@@ -87,7 +85,7 @@ def main(page: ft.Page):
                         ft.Container(
                             alignment=ft.alignment.bottom_right,
                             padding=ft.padding.only(right=10, bottom=10),
-                            content=ft.Icon(ft.Icons.WB_SUNNY_OUTLINED, size=32),
+                            content=ft.Icon(ft.Icons.WB_SUNNY_OUTLINED, size=32, color=TEXT_COLOR),
                         ),
                     ],
                 ),
@@ -95,7 +93,6 @@ def main(page: ft.Page):
         ],
     )
 
-    # --- Header ---
     header = ft.Container(
         bgcolor="#F8F8F8",
         padding=ft.padding.only(left=30, right=30, top=15, bottom=15),
@@ -105,11 +102,11 @@ def main(page: ft.Page):
             controls=[
                 ft.IconButton(icon=ft.Icons.MENU, icon_color="#000000", on_click=open_drawer),
                 ft.Row(
-                    spacing=10,
+                    spacing=1,
                     controls=[
-                        ft.Image(src="../img/logo.png", width=32, height=32),
-                        ft.Text("Cali", color=PRIMARY_COLOR, size=20, font_family="Oswald"),
-                        ft.Text("Trabaja", color="#000000", size=20, font_family="Oswald"),
+                        ft.Image(src="../img/logo.jpg", width=82, height=82),
+                        ft.Text("Cali", color=PRIMARY_COLOR, size=40, font_family="Oswald"),
+                        ft.Text("Trabaja", color="#000000", size=40, font_family="Oswald"),
                     ],
                 ),
                 ft.Container(
@@ -130,28 +127,47 @@ def main(page: ft.Page):
         ),
     )
 
-    # --- Tabs estilo pills ---
     tabs = ft.Container(
-        content=ft.Row([
-            ft.TextButton(
-                text="Usuarios",
-                style=ft.ButtonStyle(color=PRIMARY_COLOR)
-            ),
-            ft.TextButton(
-                text="Publicaciones",
-                on_click=lambda e: publicaciones.main(page),
-                style=ft.ButtonStyle(color=TEXT_COLOR)
-            ),
-            ft.TextButton(
-                text="Reportes",
-                on_click=lambda e: reportes.main(page),
-                style=ft.ButtonStyle(color=TEXT_COLOR)
-            ),
-        ]),
+        alignment=ft.alignment.center,
+        content=ft.Row(
+            [
+                ft.TextButton(
+                    text="Usuarios",
+                    style=ft.ButtonStyle(
+                        color=PRIMARY_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Publicaciones",
+                    on_click=lambda e: publicaciones.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Reportes",
+                    on_click=lambda e: reportes.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=30,
+        ),
+        # Configuracion
         border=ft.border.all(1, BORDER_COLOR),
-        border_radius=30,
-        padding=ft.padding.only(left=20, right=20),
-        margin=ft.margin.only(top=10, bottom=20),
+        border_radius=25,
+        padding=5,
+        # Re-cuadro
+        margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
+
     )
 
     # --- Filtros ---
@@ -298,7 +314,8 @@ def main(page: ft.Page):
                                     ft.Text("ID ", size=12, color=TEXT_COLOR),
                                     ft.Text(f"#{id_user}", size=12, color=PRIMARY_COLOR, weight=ft.FontWeight.BOLD),
                                     ft.PopupMenuButton(
-                                        icon=Icons.MORE_VERT,
+                                        icon=Icons.MORE_HORIZ,
+                                        icon_color=ft.Colors.BLACK,
                                         items=[
                                             ft.PopupMenuItem(text="Ver perfil"),
                                             ft.PopupMenuItem(text="Notificar Problema"),
