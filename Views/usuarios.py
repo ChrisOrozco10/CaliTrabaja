@@ -6,36 +6,34 @@ from CaliTrabaja.Views import publicaciones
 
 
 def main(page: ft.Page):
-    # --- Fuentes y tema ---
+    # -------------------- Tema y colores ----------------------------------
     page.clean()
     page.fonts = {
         "Oswald": "https://raw.githubusercontent.com/google/fonts/main/ofl/oswald/Oswald%5Bwght%5D.ttf"
     }
     page.theme = ft.Theme(font_family="Oswald")
 
-    # --- Colores ---
-    PRIMARY_COLOR = "#2FBDB3"
+    PRIMARY_COLOR    = "#2FBDB3"     # ← Color turquesa (flechas y otros elementos)
     BACKGROUND_COLOR = "#FAFAFA"
-    CARD_BACKGROUND = "#FFFFFF"
-    BORDER_COLOR = "#DDDDDD"
-    TEXT_COLOR = "#333333"
+    CARD_BACKGROUND  = "#FFFFFF"
+    BORDER_COLOR     = "#DDDDDD"
+    TEXT_COLOR       = "#333333"
 
-    # --- Configuración de la página ---
-    page.title = "CaliTrabaja - Usuarios"
+    # -------------------- Config. de ventana ------------------------------
+    page.title            = "CaliTrabaja - Usuarios"
     page.window_maximized = True
-    page.bgcolor = BACKGROUND_COLOR
-    page.padding = 20
+    page.bgcolor          = BACKGROUND_COLOR
+    page.padding          = 20
 
-    # --- Funciones del Drawer ---
+    # -------------------- Drawer ------------------------------------------
     def close_drawer(e):
         page.drawer.open = False
         page.update()
 
     def on_drawer_item_click(e):
-        if isinstance(e.control.title, ft.Text):
-            title = e.control.title.value
-            if title == "Crear Usuario Administrador":
-                crearADMIN.main(page)
+        title = e.control.title.value if isinstance(e.control.title, ft.Text) else ""
+        if title == "Crear Usuario Administrador":
+            crearADMIN.main(page)
         page.drawer.open = False
         page.update()
 
@@ -93,6 +91,7 @@ def main(page: ft.Page):
         ],
     )
 
+    # -------------------- Encabezado --------------------------------------
     header = ft.Container(
         bgcolor="#F8F8F8",
         padding=ft.padding.only(left=30, right=30, top=15, bottom=15),
@@ -105,8 +104,8 @@ def main(page: ft.Page):
                     spacing=1,
                     controls=[
                         ft.Image(src="../img/logo.jpg", width=82, height=82),
-                        ft.Text("Cali", color=PRIMARY_COLOR, size=40, font_family="Oswald"),
-                        ft.Text("Trabaja", color="#000000", size=40, font_family="Oswald"),
+                        ft.Text("Cali", size=40, font_family="Oswald", color=PRIMARY_COLOR),
+                        ft.Text("Trabaja", size=40, font_family="Oswald", color="#000000"),
                     ],
                 ),
                 ft.Container(
@@ -127,10 +126,11 @@ def main(page: ft.Page):
         ),
     )
 
+    # -------------------- Pestañas ----------------------------------------
     tabs = ft.Container(
         alignment=ft.alignment.center,
         content=ft.Row(
-            [
+            controls=[
                 ft.TextButton(
                     text="Usuarios",
                     style=ft.ButtonStyle(
@@ -161,361 +161,283 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=30,
         ),
-        # Configuracion
         border=ft.border.all(1, BORDER_COLOR),
         border_radius=25,
         padding=5,
-        # Re-cuadro
         margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
-
     )
 
-    # --- Filtros ---
+    # --------------------------- Panel de filtros --------------------------
     filtros = ft.Container(
         content=ft.Column(
-            [
-                ft.Text("Filtrar por:", weight=ft.FontWeight.BOLD, size=14, color=TEXT_COLOR),
-
-                # Campos de texto
-                ft.Row([
-                    ft.Text("ID usuario", expand=True, color=TEXT_COLOR, size=14,weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                ft.Row([
-                    ft.Text("Nombre", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                ft.Row([
-                    ft.Text("Apellido", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                ft.Row([
-                    ft.Text("Correo", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                # Rol
-                ft.Row([
-                    ft.Text("Rol", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Experto"),
-                            ft.dropdown.Option("Cliente"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                # Estado
-                ft.Row([
-                    ft.Text("Estado", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Activo"),
-                            ft.dropdown.Option("Inactivo"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                # Publicaciones
-                ft.Row([
-                    ft.Text("Publicaciones", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Todas"),
-                            ft.dropdown.Option("Ninguna"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                # Perfiles
-                ft.Row([
-                    ft.Text("Perfiles", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Todos"),
-                            ft.dropdown.Option("Ninguno"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-
-                # Categorías
-                ft.Row([
-                    ft.Text("Categorías", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Electricista"),
-                            ft.dropdown.Option("Plomero"),
-                            ft.dropdown.Option("Carpintero"),
-                            ft.dropdown.Option("Jardinero"),
-                            ft.dropdown.Option("Cerrajero"),
-                            ft.dropdown.Option("Pintor"),
-                            ft.dropdown.Option("Niñera"),
-                            ft.dropdown.Option("Tecnólogo en sistemas"),
-                            ft.dropdown.Option("Técnico automotriz"),
-                            ft.dropdown.Option("Gasodomésticos"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-            ],
             spacing=8,
-            # Eliminado vertical_alignment de aquí, ya que no es un argumento válido para ft.Column
+            controls=[
+                ft.Text("Filtrar por:", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
+
+                # --- ID usuario ---
+                ft.Row(
+                    controls=[
+                        ft.Text("ID usuario", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Nombre ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Nombre", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Apellido ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Apellido", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Correo ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Correo", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Rol ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Rol", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.Dropdown(
+                            width=120, text_size=12, border_radius=5, value="Todos",
+                            options=[ft.dropdown.Option(o) for o in ["Todos", "Experto", "Cliente"]],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Estado ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Estado", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.Dropdown(
+                            width=120, text_size=12, border_radius=5, value="Todos",
+                            options=[ft.dropdown.Option(o) for o in ["Todos", "Activo", "Inactivo"]],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Publicaciones ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Publicaciones", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.Dropdown(
+                            width=120, text_size=12, border_radius=5, value="Todas",
+                            options=[ft.dropdown.Option(o) for o in ["Todas", "Ninguna"]],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Perfiles ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Perfiles", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.Dropdown(
+                            width=120, text_size=12, border_radius=5, value="Todos",
+                            options=[ft.dropdown.Option(o) for o in ["Todos", "Ninguno"]],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+
+                # --- Categorías ---
+                ft.Row(
+                    controls=[
+                        ft.Text("Categorías", size=14, weight=ft.FontWeight.BOLD,
+                                color=TEXT_COLOR, expand=True),
+                        ft.Dropdown(
+                            width=120, text_size=12, border_radius=5, value="Todas",
+                            options=[ft.dropdown.Option(o) for o in [
+                                "Todas", "Electricista", "Plomero", "Carpintero", "Jardinero",
+                                "Cerrajero", "Pintor", "Niñera", "Tecnólogo en sistemas",
+                                "Técnico automotriz", "Gasodomésticos"]],
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+            ],
         ),
         padding=12,
         bgcolor=CARD_BACKGROUND,
-        height=540,
         width=260,
         border=ft.border.all(1, BORDER_COLOR),
         border_radius=ft.border_radius.all(16),
     )
 
-    # --- Componente Tarjeta de Usuario ---
-    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, foto):
+    # -------------------- Tarjeta de usuario -------------------------------
+    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating):
+        estrellas = ft.Row([
+            ft.Icon(ft.Icons.STAR if i < rating else ft.Icons.STAR_BORDER, color="#2FBDB3", size=24)
+            for i in range(5)
+        ])
         return ft.Container(
-            bgcolor=CARD_BACKGROUND,
-            padding=20,
+            bgcolor="#FFFFFF",
+            padding=30,
             content=ft.Column(
-                [
+                spacing=10,
+                controls=[
+                    ft.Text(nombre, size=20, weight=ft.FontWeight.BOLD, color="#333333"),
+                    estrellas,
+                    ft.Text(f"Rol {rol}", size=18, color="#333333"),
+                    ft.Text(f"Categoría {categoria}", size=18, color="#333333"),
+                    ft.Text(f"Estado {estado}", size=18, color="#333333"),
+                    ft.Text(f"Se unió el {fecha}", size=18, color="#333333"),
+                    ft.Text(f"Correo {correo}", size=18, color="#333333"),
                     ft.Row(
-                        [
-                            # Avatar + Nombre
-                            ft.Row(
-                                [
-                                    ft.CircleAvatar(
-                                        radius=22,
-                                        content=ft.Image(src="../img/avatar.png", width=48, height=48, border_radius=22,
-                                                         fit=ft.ImageFit.COVER),
-                                    ),
-
-                                    ft.Text(nombre, size=16, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
-                                ],
-                                spacing=12,
-                            ),
-                            # ID + acciones
-                            ft.Row(
-                                [
-                                    ft.Text("ID ", size=12, color=TEXT_COLOR),
-                                    ft.Text(f"#{id_user}", size=12, color=PRIMARY_COLOR, weight=ft.FontWeight.BOLD),
-                                    ft.PopupMenuButton(
-                                        icon=Icons.MORE_HORIZ,
-                                        icon_color=ft.Colors.BLACK,
-                                        items=[
-                                            ft.PopupMenuItem(text="Ver perfil"),
-                                            ft.PopupMenuItem(text="Notificar Problema"),
-                                            ft.PopupMenuItem(text="Deshabilitar Cuenta"),
-                                        ],
-                                    ),
-                                ]
-                            ),
+                        spacing=15,
+                        controls=[
+                            ft.ElevatedButton(f"Publicaciones {publicaciones}", bgcolor="#F5F5F5", color="#333333"),
+                            ft.ElevatedButton(f"Reportes {reportes}", bgcolor="#2FBDB3", color="#FFFFFF"),
                         ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
-                    ft.Text(f"Rol       {rol}", color=TEXT_COLOR),
-                    ft.Text(f"Categoría {categoria}", color=TEXT_COLOR),
-                    ft.Text(f"Estado    {estado}", color=TEXT_COLOR),
-                    ft.Text(f"Se unió el  {fecha}", color=TEXT_COLOR),
-                    ft.Text(f"Correo    {correo}", color=TEXT_COLOR),
-                    ft.Row(
-                        [
-                            ft.ElevatedButton(
-                                f"Publicaciones {publicaciones}",
-                                style=ft.ButtonStyle(
-                                    padding=ft.padding.symmetric(horizontal=15, vertical=10),
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                ),
-                                bgcolor="#F5F5F5",
-                                color=TEXT_COLOR,
-                            ),
-                            ft.ElevatedButton(
-                                f"Reportes {reportes}",
-                                style=ft.ButtonStyle(
-                                    padding=ft.padding.symmetric(horizontal=15, vertical=10),
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                ),
-                                bgcolor=PRIMARY_COLOR,
-                                color=CARD_BACKGROUND,
-                            ),
-                        ],
-                        spacing=10,
                     ),
                 ],
-                spacing=8,
             ),
-            border_radius=8,
-            border=ft.border.all(1, BORDER_COLOR),
-            height= 289,
-            width=280,
+            border_radius=10,
+            border=ft.border.all(1, "#DDDDDD"),
+            height=350,
+            width=400,
         )
 
-    # --- Datos de usuarios de demostración ---
+    # -------------------- Datos de ejemplo ---------------------------------
     usuarios_demo = [
-        {
-            "nombre": "Leonel Messi",
-            "rol": "Experto",
-            "categoria": "Limpieza",
-            "estado": "Activo",
-            "fecha": "20 de Enero del 2025",
-            "correo": "messiento@gmail.com",
-            "id_user": "01",
-            "publicaciones": "1/2",
-            "reportes": "1",
-            "foto": "https://i.pravatar.cc/150?img=11",
-        },
-        {
-            "nombre": "Angie Calderón",
-            "rol": "Cliente",
-            "categoria": "Limpieza",
-            "estado": "Activo",
-            "fecha": "20 de Enero del 2025",
-            "correo": "angieasyavina@gmail.com",
-            "id_user": "02",
-            "publicaciones": "1/2",
-            "reportes": "2",
-            "foto": "https://i.pravatar.cc/150?img=12",
-        },
-        {
-            "nombre": "Carlos Pérez",
-            "rol": "Experto",
-            "categoria": "Plomería",
-            "estado": "Inactivo",
-            "fecha": "15 de Febrero del 2025",
-            "correo": "carlosp1978@gmail.com",
-            "id_user": "03",
-            "publicaciones": "3/4",
-            "reportes": "0",
-            "foto": "https://i.pravatar.cc/150?img=13",
-        },
-        {
-            "nombre": "María García",
-            "rol": "Cliente",
-            "categoria": "Electricidad",
-            "estado": "Activo",
-            "fecha": "02 de Marzo del 2025",
-            "correo": "mariag@gmail.com",
-            "id_user": "04",
-            "publicaciones": "0",
-            "reportes": "1",
-            "foto": "https://i.pravatar.cc/150?img=14",
-        },
-        {
-            "nombre": "Juan Rodríguez",
-            "rol": "Experto",
-            "categoria": "Jardinería",
-            "estado": "Activo",
-            "fecha": "10 de Marzo del 2025",
-            "correo": "juanrdz@gmail.com",
-            "id_user": "05",
-            "publicaciones": "5/5",
-            "reportes": "2",
-            "foto": "https://i.pravatar.cc/150?img=15",
-        },
+        dict(nombre="Leonel Messi",   rol="Experto", categoria="Limpieza",
+             estado="Activo",  fecha="20/01/2025", correo="messiento@gmail.com",
+             id_user="01", publicaciones="1/2", reportes="1", rating=4),
+        dict(nombre="Angie Calderón", rol="Cliente", categoria="Limpieza",
+             estado="Activo",  fecha="20/01/2025", correo="angieasyavina@gmail.com",
+             id_user="02", publicaciones="1/2", reportes="2", rating=5),
+        dict(nombre="Carlos Pérez",   rol="Experto", categoria="Plomería",
+             estado="Inactivo", fecha="15/02/2025", correo="carlosp1978@gmail.com",
+             id_user="03", publicaciones="3/4", reportes="0", rating=3),
+        dict(nombre="María García",   rol="Cliente", categoria="Electricidad",
+             estado="Activo",  fecha="02/03/2025", correo="mariag@gmail.com",
+             id_user="04", publicaciones="0",   reportes="1", rating=3),
+        dict(nombre="Juan Rodríguez", rol="Experto", categoria="Jardinería",
+             estado="Activo",  fecha="10/03/2025", correo="juanrdz@gmail.com",
+             id_user="05", publicaciones="5/5", reportes="2", rating=2),
     ]
+    tarjetas = [tarjeta_usuario(**u) for u in usuarios_demo]
 
-    # Convertir datos a tarjetas
-    tarjetas = [
-        tarjeta_usuario(**u) for u in usuarios_demo
-    ]
+    # -------------------- Carrusel -----------------------------------------
+    CARD_WIDTH     = 280
+    CARD_SPACING   = 20
+    VISIBLE_CARDS  = 3
+    CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
-    # --- Carrusel ---
-    VISIBLE_CARDS = 3  # número de tarjetas visibles a la vez
+    # Distancia exacta entre flechas (una tarjeta + su separación)
+    ARROW_SPACING  = CARD_WIDTH + CARD_SPACING      # 300 px
+
     start_index = 0
 
-    tarjetas_container = ft.Row(spacing=20, expand=True)
+    tarjetas_row = ft.Row(spacing=CARD_SPACING)
+    tarjetas_container = ft.Container(
+        width=CAROUSEL_WIDTH,
+        alignment=ft.alignment.center,
+        content=tarjetas_row,
+    )
 
     def actualizar_tarjetas():
-        visible = []
-        total = len(tarjetas)
-        if total > 0:
-            # Asegura que siempre haya suficientes tarjetas para llenar la vista o se repitan
-            # para el efecto de bucle.
-            # Para un deslizamiento de bloque, solo tomamos las tarjetas directamente.
-            for i in range(VISIBLE_CARDS):
-                visible.append(tarjetas[(start_index + i) % total])
-        tarjetas_container.controls = visible
+        tarjetas_row.controls = [
+            tarjetas[(start_index + i) % len(tarjetas)]
+            for i in range(VISIBLE_CARDS)
+        ]
         page.update()
 
     def siguiente(e):
         nonlocal start_index
-        total = len(tarjetas)
-        # Avanza VISIBLE_CARDS posiciones
-        if total > VISIBLE_CARDS:
-            start_index = (start_index + VISIBLE_CARDS) % total
+        if len(tarjetas) > VISIBLE_CARDS:
+            start_index = (start_index + VISIBLE_CARDS) % len(tarjetas)
             actualizar_tarjetas()
 
     def anterior(e):
         nonlocal start_index
-        total = len(tarjetas)
-        # Retrocede VISIBLE_CARDS posiciones
-        if total > VISIBLE_CARDS:
-            start_index = (start_index - VISIBLE_CARDS + total) % total
+        if len(tarjetas) > VISIBLE_CARDS:
+            start_index = (start_index - VISIBLE_CARDS) % len(tarjetas)
             actualizar_tarjetas()
 
     actualizar_tarjetas()
 
-    btn_prev = ft.IconButton(icon=ft.Icons.ARROW_BACK_IOS_NEW, on_click=anterior, icon_size=40, icon_color=TEXT_COLOR)
-    btn_next = ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40, icon_color=TEXT_COLOR)
+    # Flechas en color PRIMARY_COLOR y con icon_size 40 px
+    btn_prev = ft.IconButton(
+        icon=ft.Icons.ARROW_BACK_IOS_NEW,
+        on_click=anterior,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
+    )
+    btn_next = ft.IconButton(
+        icon=ft.Icons.ARROW_FORWARD_IOS,
+        on_click=siguiente,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
+    )
 
-    carrusel = ft.Row([
-        btn_prev,
-        tarjetas_container,
-        btn_next,
-    ], spacing=10, alignment=ft.MainAxisAlignment.CENTER, expand=True)
-
-
-    # --- Contenedor de reportes ---
-    reportes_container = ft.Container(
-        content=ft.Column(
-            [
-                ft.Text(
-                    "Todos los usuarios", size=22, weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR
-                ),
-                carrusel,
-                ft.Text(
-                    f"Total usuarios: {len(usuarios_demo)}", size=14, color=TEXT_COLOR
-                ),
-            ],
-            spacing=20,
+    # Navegación centrada y con spacing exacto
+    navegacion = ft.Container(
+        width=CAROUSEL_WIDTH,
+        content=ft.Row(
+            controls=[btn_prev, btn_next],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=ARROW_SPACING,
         ),
     )
 
-    # --- Contenido principal ---
-    main_content = ft.Row(
-        [
-            filtros,
-            ft.Container(
-                content=reportes_container,
-                expand=True,
-                padding=ft.padding.only(left=20),
-            ),
-        ],
-        expand=True,
-        spacing=20,
-        vertical_alignment=ft.CrossAxisAlignment.START # Asegura que todo el contenido del Row se alinee arriba
+    carrusel = ft.Column(
+        controls=[tarjetas_container, navegacion],
+        spacing=25,
+        alignment=ft.MainAxisAlignment.CENTER,
     )
 
-    # --- Agregar todo a la página ---
-    page.add(
-        header,
-        tabs,
-        main_content,
+    # -------------------- Contenido principal ------------------------------
+    reportes_container = ft.Column(
+        spacing=20,
+        controls=[
+            ft.Text("Todos los usuarios", size=22, weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
+            carrusel,
+            ft.Text(f"Total usuarios: {len(usuarios_demo)}", size=14, color=TEXT_COLOR),
+        ],
     )
+
+    filtros_y_total = ft.Column([
+        filtros,
+        ft.Container(
+            content=ft.Text(f"Total de usuarios: {len(usuarios_demo)}", size=14, color=TEXT_COLOR),
+            padding=ft.padding.only(top=20),
+            alignment=ft.alignment.center,
+        )
+    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
+    main_content = ft.ResponsiveRow([
+        ft.Container(content=filtros_y_total, col={'sm': 12, 'md': 4, 'lg': 3}),
+        ft.Container(content=reportes_container, col={'sm': 12, 'md': 8, 'lg': 9}),
+    ], spacing=20)
+
+    page.add(header, tabs, main_content)
+
 
 if __name__ == "__main__":
     ft.app(target=main)

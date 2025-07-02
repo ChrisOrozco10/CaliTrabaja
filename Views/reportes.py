@@ -249,6 +249,7 @@ def main(page: ft.Page):
                         ft.Text(f"#{id_reporte}", color=PRIMARY_COLOR, weight=ft.FontWeight.BOLD, size=12),
                         ft.PopupMenuButton(
                             icon=Icons.MORE_HORIZ,
+                            icon_color=ft.Colors.BLACK,
                             items=[
                                 ft.PopupMenuItem(text="Ver perfil"),
                                 ft.PopupMenuItem(text="Eliminar Reporte"),
@@ -348,7 +349,7 @@ def main(page: ft.Page):
                         weight=ft.FontWeight.BOLD,
                         color=PRIMARY_COLOR,
                     ),
-                    padding=ft.padding.only(left=-240),
+                    padding=ft.padding.only(left=380),
                 ),
                 ft.Container(content=tarjetas_container, padding=30, margin=0),
                 ft.Row([
@@ -357,10 +358,6 @@ def main(page: ft.Page):
                     ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40,
                                   icon_color=PRIMARY_COLOR),
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=520),
-                ft.Text(f"Total de reportes: {VISIBLE_CARDS}/{len(reportes_demo)}", size=14,
-                        color=TEXT_COLOR,
-                        text_align=ft.TextAlign.CENTER),
-
             ],
             spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.START,
@@ -369,10 +366,25 @@ def main(page: ft.Page):
         padding=ft.padding.only(left=0, right=0, top=12, bottom=0)
     )
 
+    total_reportes_text = ft.Text(
+        f"Total de reportes: {VISIBLE_CARDS}/{len(reportes_demo)}",
+        size=14,
+        color=TEXT_COLOR,
+    )
+
+    filtros_y_total = ft.Column([
+        filtros,
+        ft.Container(
+            content=total_reportes_text,
+            padding=ft.padding.only(top=20),
+            alignment=ft.alignment.center_left,
+        )
+    ], horizontal_alignment=ft.CrossAxisAlignment.START)
+
     main_content = ft.Row(
         [
             ft.Container(
-                content=ft.Column([filtros]),
+                content=filtros_y_total,
                 padding=ft.padding.only(top=85),
             ),
             ft.Container(

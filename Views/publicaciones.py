@@ -407,8 +407,6 @@ def main(page: ft.Page):
                     ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40,
                                   icon_color=PRIMARY_COLOR),
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=520),
-                ft.Text(f"Total publicaciones: {VISIBLE_CARDS}/{len(publicaciones_demo)}", size=14, color=TEXT_COLOR,
-                        text_align=ft.TextAlign.CENTER),
             ],
             spacing=10,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -420,7 +418,9 @@ def main(page: ft.Page):
     main_content = ft.Row(
         [
             ft.Container(
-                content=ft.Column([filtros]),
+                content=ft.Column([filtros,
+                                   ft.Text(f"Total publicaciones: {VISIBLE_CARDS}/{len(publicaciones_demo)}", size=14,
+                                           color=TEXT_COLOR)]),
                 padding=ft.padding.only(top=85),
             ),
             ft.Container(
