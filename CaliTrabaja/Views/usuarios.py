@@ -6,8 +6,22 @@ import login
 import inicio
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
+from CaliTrabaja.API_services.obtener_usuarios import gestionar_usuarios_admin
+from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 
 def main(page: ft.Page):
+
+    correo="jupahure@gmail.com"
+    contrasena="A1234567"
+
+    resultado = iniciar_sesion_api(correo, contrasena)
+    if not resultado or not resultado.get("success"):
+        page.add(ft.Text("No se pudo iniciar sesión"))
+    else:
+        token = resultado.get("token")
+        setattr(page, "session_token", token)
+
+
     # -------------------- Tema y colores ----------------------------------
     page.clean()
     page.fonts = {
@@ -343,8 +357,10 @@ def main(page: ft.Page):
         border_radius=ft.border_radius.all(16),
     )
 
+
+
     def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating):
-        is_admin = rol.lower() == "admin"
+
 
         controls = [
             ft.Row(
@@ -396,7 +412,7 @@ def main(page: ft.Page):
             ft.Text(f"ID: {id_user}", size=18, color="#333333"),
         ]
 
-        if not is_admin:
+        if rol:
             controls.insert(1, ft.Row([
                 ft.Icon(ft.Icons.STAR if i < rating else ft.Icons.STAR_BORDER, color="#2FBDB3", size=24)
                 for i in range(5)
@@ -441,25 +457,69 @@ def main(page: ft.Page):
             width=400,
         )
 
-    # -------------------- Datos de ejemplo ---------------------------------
-    usuarios_demo = [
-        dict(nombre="Leonel Messi",   rol="Experto", categoria="Limpieza",
-             estado="Activo",  fecha="20/01/2025", correo="messiento@gmail.com",
-             id_user="01", publicaciones="1/2", reportes="1", rating=4),
-        dict(nombre="Angie Calderón", rol="Cliente", categoria="Limpieza",
-             estado="Activo",  fecha="20/01/2025", correo="angieasyavina@gmail.com",
-             id_user="02", publicaciones="1/2", reportes="2", rating=5),
-        dict(nombre="Carlos Pérez",   rol="Admin", categoria="Plomería",
-             estado="Activo", fecha="15/02/2025", correo="carlosp1978@gmail.com",
-             id_user="03", publicaciones="3/4", reportes="0", rating=3),
-        dict(nombre="María García",   rol="Cliente", categoria="Electricidad",
-             estado="Activo",  fecha="02/03/2025", correo="mariag@gmail.com",
-             id_user="04", publicaciones="0",   reportes="1", rating=3),
-        dict(nombre="Juan Rodríguez", rol="Experto", categoria="Jardinería",
-             estado="Activo",  fecha="10/03/2025", correo="juanrdz@gmail.com",
-             id_user="05", publicaciones="5/5", reportes="2", rating=2),
-    ]
-    tarjetas = [tarjeta_usuario(**u) for u in usuarios_demo]
+    def obtener_usuario(page):
+        # Obtener el token de la sesión
+
+
+        token = getattr(page, "session_token", None)
+        if not token:
+            page.add(ft.Text("Debe iniciar sesión primero"))
+            return
+
+        # Traer los usuarios desde la API
+        usuarios = gestionar_usuarios_admin(token)
+        print("Usuarios recibidos de la API:", usuarios)
+        if not usuarios:
+            return [ft.Text("No se pudo obtener usuarios")]
+
+        tarjetas = []
+
+
+
+        for usuario in usuarios:
+            # Si usuario es un diccionario, usamos .get(), si no, asumimos que es un string
+            if isinstance(usuario, dict):
+                nombre = f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}"
+                rol = usuario.get("tipo_rol", "N/A")
+                categoria = usuario.get("tipo_categoria", "N/A")
+                estado = usuario.get("estado", "N/A")
+                registro = usuario.get("fecha_registro", "N/A")
+                correo = usuario.get("correo", "N/A")
+                id_user = usuario.get("usuario_id", "N/A")
+                publicaciones = usuario.get("publicaciones", 0)
+                reportes = usuario.get("reportes", 0)
+                rating = usuario.get("rating", 0)
+            else:
+                # Si no es diccionario, usamos valores por defecto
+                nombre = str(usuario)
+                rol = "N/A"
+                categoria = "N/A"
+                estado = "N/A"
+                registro = "N/A"
+                correo = "N/A"
+                id_user = "N/A"
+                publicaciones = 0
+                reportes = 0
+                rating = 0
+
+            tarjetas.append(
+                tarjeta_usuario(
+                    nombre=nombre,
+                    rol = rol,
+                    categoria = categoria,
+                    estado = estado,
+                    fecha= registro,
+                    correo = correo,
+                    id_user= id_user,
+                    publicaciones=publicaciones,
+                    reportes=reportes,
+                    rating=rating
+                )
+            )
+        return tarjetas
+
+
+
 
     # -------------------- Carrusel -----------------------------------------
     CARD_WIDTH     = 400
@@ -478,8 +538,10 @@ def main(page: ft.Page):
         alignment=ft.alignment.center,
         content=tarjetas_row,
     )
+    tarjetas = obtener_usuario(page)  # Defínelo primero
 
     def actualizar_tarjetas():
+        nonlocal tarjetas
         tarjetas_row.controls = [
             tarjetas[(start_index + i) % len(tarjetas)]
             for i in range(VISIBLE_CARDS)
@@ -542,10 +604,11 @@ def main(page: ft.Page):
 
     )
 
+    total_usuarios = len(tarjetas)
     filtros_y_total = ft.Column([
         filtros,
         ft.Container(
-            content=ft.Text(f"Total de usuarios: {len(usuarios_demo)}", size=14, color=TEXT_COLOR),
+            content=ft.Text(f"Total de usuarios: {total_usuarios}", size=14, color=TEXT_COLOR),
             padding=ft.padding.only(top=20),
             alignment=ft.alignment.center,
         )

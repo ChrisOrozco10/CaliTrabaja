@@ -8,8 +8,24 @@ import login
 import inicio
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
+from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
+from CaliTrabaja.API_services.obtener_publicaciones import gestionar_publicaciones_admin
 
 def main(page: ft.Page):
+    correo = "jupahure@gmail.com"
+    contrasena = "A1234567"
+
+    resultado = iniciar_sesion_api(correo, contrasena)
+    if not resultado or not resultado.get("success"):
+        page.add(ft.Text("No se pudo iniciar sesión"))
+    else:
+        token = resultado.get("token")
+        setattr(page, "session_token", token)
+
+
+
+
+
     page.clean()
     page.fonts = {
         "Oswald": "https://raw.githubusercontent.com/google/fonts/main/ofl/oswald/Oswald%5Bwght%5D.ttf"
@@ -295,7 +311,7 @@ def main(page: ft.Page):
         border_radius=ft.border_radius.all(16),
     )
 
-    def tarjeta_publicacion(id_publicacion, nombre, profesion, descripcion, costo, categoria, calificacion_estrellas=4):
+    def tarjeta_publicacion(id_publicacion, nombre, profesion, descripcion, costo, categoria, calificacion_estrellas=3):
         def get_stars(rating):
             return ft.Row(
                 [
@@ -420,70 +436,66 @@ def main(page: ft.Page):
             height=390,
         )
 
-    publicaciones_demo = [
-        {
-            "id_publicacion": "34",
-            "nombre": "Claudia Henao",
-            "profesion": "Fotógrafa",
-            "descripcion": "Con una combinación de técnica, creatividad y un profundo respeto por el instante. Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "costo": "38.000",
-            "categoria": "Limpieza",
-            "calificacion_estrellas": 3,
-        },
-        {
-            "id_publicacion": "45",
-            "nombre": "Angela Mart",
-            "profesion": "Nutricionista",
-            "descripcion": "Como entrenadora personal, te ayudo a lograr tu mejor versión con planes personalizados y mucha motivación. ¡Alcanza tus metas de bienestar!",
-            "costo": "45.000",
-            "categoria": "Belleza",
-            "calificacion_estrellas": 5,
-        },
-        {
-            "id_publicacion": "58",
-            "nombre": "Roberto Gómez",
-            "profesion": "Plomero",
-            "descripcion": "Especialista en reparaciones de fugas y desatascos. Trabajo rápido y eficiente, con garantía. ¡Soluciones duraderas para tu hogar!",
-            "costo": "50.000",
-            "categoria": "Reparación",
-            "calificacion_estrellas": 3,
-        },
-        {
-            "id_publicacion": "62",
-            "nombre": "Sofía Pérez",
-            "profesion": "Diseñadora Gráfica",
-            "descripcion": "Diseño creativo y profesional para tus proyectos. Logos, branding, ilustraciones y más. ¡Tu visión hecha realidad!",
-            "costo": "60.000",
-            "categoria": "Diseño",
-            "calificacion_estrellas": 4,
-        },
-        {
-            "id_publicacion": "71",
-            "nombre": "Carlos Restrepo",
-            "profesion": "Electricista",
-            "descripcion": "Servicios eléctricos residenciales y comerciales. Instalaciones, reparaciones, mantenimiento y más. ¡Seguridad y calidad garantizadas!",
-            "costo": "55.000",
-            "categoria": "Reparación",
-            "calificacion_estrellas": 4,
-        },
-        {
-            "id_publicacion": "89",
-            "nombre": "María Fernanda",
-            "profesion": "Asesora de Moda",
-            "descripcion": "Transforma tu estilo personal. Asesoría de imagen, personal shopper y organización de armario. ¡Descubre tu mejor versión!",
-            "costo": "70.000",
-            "categoria": "Belleza",
-            "calificacion_estrellas": 5,
-        },
-    ]
 
-    tarjetas = [tarjeta_publicacion(**p) for p in publicaciones_demo]
+
+
+    def obtener_publicacion(page):
+        # Obtener el token de la sesión
+
+        token = getattr(page, "session_token", None)
+        if not token:
+            page.add(ft.Text("Debe iniciar sesión primero"))
+            return
+
+        # Traer los usuarios desde la API
+        publicaciones = gestionar_publicaciones_admin(token)
+        print("Publicaciones recibidas de la API:", usuarios)
+        if not usuarios:
+            return [ft.Text("No se pudo obtener publicaciones")]
+
+        tarjetas = []
+
+        for publicacion in publicaciones:
+            if isinstance(publicacion, dict):
+                nombre = f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}"
+                id_publicacion = publicacion.get("publicacion_id", "N/A")
+                profesion = publicacion.get("tipo_categoria", "N/A")
+                descripcion = publicacion.get("descripcion_publicacion", "N/A")
+                costo = publicacion.get("precio", "N/A")
+                categoria= publicacion.get("nombre_subcategoria", "N/A")
+                calificacion_estrellas= publicacion.get("calificacion_estrellas", 3)
+            else:
+                # Si no es diccionario, usamos valores por defecto
+                nombre = str(publicacion)
+                id_publicacion = "N/A"
+                profesion= "N/A"
+                descripcion = "N/A"
+                costo = "N/A"
+                categoria = "N/A"
+                calificacion_estrellas = 0
+
+            tarjetas.append(
+                tarjeta_publicacion(
+                    nombre=nombre,
+                    id_publicacion=id_publicacion,
+                    profesion=profesion,
+                    descripcion= descripcion,
+                    costo=costo,
+                    categoria=categoria,
+                    calificacion_estrellas=calificacion_estrellas
+                )
+            )
+        return tarjetas
+
 
     VISIBLE_CARDS = 5
     start_index = 0
     tarjetas_container = ft.Row(spacing=20, expand=True, wrap=False, scroll=None)
 
+    tarjetas = obtener_publicacion(page)
+
     def actualizar_tarjetas():
+        nonlocal  tarjetas
         tarjetas_container.controls = [tarjetas[(start_index + i) % len(tarjetas)] for i in range(VISIBLE_CARDS)]
         page.update()
 
@@ -525,13 +537,12 @@ def main(page: ft.Page):
         expand=True,
         padding=ft.padding.only(left=0, right=0, top=12, bottom=0)
     )
-
+    total_publicaciones = len(tarjetas)
     main_content = ft.Row(
         [
             ft.Container(
                 content=ft.Column([filtros,
-                                   ft.Text(f"Total publicaciones: {VISIBLE_CARDS}/{len(publicaciones_demo)}", size=14,
-                                           color=TEXT_COLOR)]),
+                                   ft.Text(f"Total publicaciones: {VISIBLE_CARDS}/{total_publicaciones}", size=14,   color=TEXT_COLOR)]),
                 padding=ft.padding.only(top=85),
             ),
             ft.Container(
