@@ -12,6 +12,11 @@ from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 from CaliTrabaja.API_services.obtener_publicaciones import gestionar_publicaciones_admin
 
 def main(page: ft.Page):
+    global tarjetas_container, tarjetas
+
+
+
+
     correo = "jupahure@gmail.com"
     contrasena = "A1234567"
 
@@ -269,47 +274,10 @@ def main(page: ft.Page):
 
     )
 
-    filtros = ft.Container(
-        content=ft.Column(
-            [
-                ft.Text("Filtrar por:", weight=ft.FontWeight.BOLD, size=14, color=TEXT_COLOR),
-                ft.Row([
-                    ft.Text("ID publicación", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Row([
-                    ft.Text("Fecha Reporte", weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
-                    ft.IconButton(icon=ft.Icons.CALENDAR_MONTH, tooltip="Seleccionar fecha", on_click=lambda e: open_date_picker()),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Row([
-                    ft.Text("Categorías", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Dropdown(
-                        width=120,
-                        options=[
-                            ft.dropdown.Option("Todas"),
-                            ft.dropdown.Option("Limpieza"),
-                            ft.dropdown.Option("Belleza"),
-                            ft.dropdown.Option("Reparación"),
-                            ft.dropdown.Option("Diseño"),
-                        ],
-                        text_size=12,
-                        border_radius=5,
-                    ),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Row([
-                    ft.Text("Premium", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    ft.Checkbox(width=20, height=20),
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-            ],
-            spacing=8,
-        ),
-        padding=12,
-        bgcolor=CARD_BACKGROUND,
-        height=250,
-        width=260,
-        border=ft.border.all(1, BORDER_COLOR),
-        border_radius=ft.border_radius.all(16),
-    )
+
+
+
+
 
     def tarjeta_publicacion(id_publicacion, nombre, profesion, descripcion, costo, categoria, calificacion_estrellas=3):
         def get_stars(rating):
@@ -436,128 +404,361 @@ def main(page: ft.Page):
             height=390,
         )
 
+    # 🔹 Controles de filtros
+    id_publicacion_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    categoria_dropdown = ft.Dropdown(
+        width=120,
+        options=[
+            ft.dropdown.Option("Todas"),
+            ft.dropdown.Option("Reparación y Mantenimiento"),
+            ft.dropdown.Option("Cuidado y Asistencia"),
+            ft.dropdown.Option("Bienestar de Mascotas"),
+            ft.dropdown.Option("Educativos y aprendizaje"),
+            ft.dropdown.Option("Hogar y Limpieza"),
+            ft.dropdown.Option("Construcción y Remodelación"),
+            ft.dropdown.Option("Artísticos y creatividad visual"),
+            ft.dropdown.Option("Movilidad y transporte"),
+            ft.dropdown.Option("Gastronomía"),
+            ft.dropdown.Option("Eventos"),
+            ft.dropdown.Option("Bienestar Personal"),
+        ],
+        text_size=12,
+        border_radius=5,
+        value="Todas",
+    )
 
 
 
-    def obtener_publicacion(page):
-        # Obtener el token de la sesión
 
+    #-----------------------------------------------------------------
+
+    # Contenedor para las tarjetas (inicialmente vacío)
+    tarjetas_container = ft.Row(
+        controls=[],  # Inicia el Row vacío
+        spacing=10,
+        alignment=ft.MainAxisAlignment.START,
+        wrap=False,  # Cambié a True para que las tarjetas puedan ocupar varias filas si es necesario
+        expand=True
+    )
+
+
+
+
+
+
+
+
+    #------------------------------------------------
+    VISIBLE_CARDS = 5
+    start_index = 0
+    tarjetas_todas = []
+    tarjetas_filtradas = []
+    tarjetas_actuales = [] # <- Lista activa
+
+
+    def actualizar_tarjetas(page, start_index, tarjetas_lista):
+
+        tarjetas_container.controls.clear()
+
+        if not tarjetas_lista:
+            tarjetas_container.controls.append(ft.Text("No hay publicaciones disponibles.", key="error_msg"))
+            total_publicaciones = 0
+        else:
+            # Mostrar las visibles según el índice
+            visibles = tarjetas_lista[start_index:start_index + VISIBLE_CARDS]
+            tarjetas_container.controls.extend(visibles)
+            total_publicaciones = len(tarjetas_lista)
+
+
+        actualizar_total_publicaciones(total_publicaciones)
+        page.update()
+
+        # Funciones de paginación
+    def siguiente(e):
+        global start_index,  tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+                start_index += VISIBLE_CARDS
+            else:
+                start_index = 0
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+
+    def anterior(e):
+        global start_index,  tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
+                start_index -= VISIBLE_CARDS
+            else:
+                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
+                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+
+    def obtener_publicacion(page, id_pub=None, categoria=None):
         token = getattr(page, "session_token", None)
         if not token:
             page.add(ft.Text("Debe iniciar sesión primero"))
-            return
+            return []
 
-        # Traer los usuarios desde la API
-        publicaciones = gestionar_publicaciones_admin(token)
-        print("Publicaciones recibidas de la API:", usuarios)
-        if not usuarios:
-            return [ft.Text("No se pudo obtener publicaciones")]
+        # Construir los filtros dinámicamente
+        filtros = {}
+        if id_pub:
+            filtros["publicacion_id"] = id_pub  # Solo agregamos el filtro si tiene valor
+        if categoria and categoria != "Todas":
+            filtros["tipo_categoria"] = categoria
 
+        # Verificar los filtros antes de hacer la llamada a la API
+        print("📌 Filtros enviados a la API:", filtros)
+
+        # Llamar a la API para obtener las publicaciones
+        publicaciones = gestionar_publicaciones_admin(token, filtros)
+        print("Publicaciones recibidas de la API:", publicaciones)
+
+
+
+
+
+        # Crear las tarjetas con la información obtenida
         tarjetas = []
-
         for publicacion in publicaciones:
             if isinstance(publicacion, dict):
-                nombre = f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}"
-                id_publicacion = publicacion.get("publicacion_id", "N/A")
-                profesion = publicacion.get("tipo_categoria", "N/A")
-                descripcion = publicacion.get("descripcion_publicacion", "N/A")
-                costo = publicacion.get("precio", "N/A")
-                categoria= publicacion.get("nombre_subcategoria", "N/A")
-                calificacion_estrellas= publicacion.get("calificacion_estrellas", 3)
-            else:
-                # Si no es diccionario, usamos valores por defecto
-                nombre = str(publicacion)
-                id_publicacion = "N/A"
-                profesion= "N/A"
-                descripcion = "N/A"
-                costo = "N/A"
-                categoria = "N/A"
-                calificacion_estrellas = 0
-
-            tarjetas.append(
-                tarjeta_publicacion(
-                    nombre=nombre,
-                    id_publicacion=id_publicacion,
-                    profesion=profesion,
-                    descripcion= descripcion,
-                    costo=costo,
-                    categoria=categoria,
-                    calificacion_estrellas=calificacion_estrellas
+                tarjetas.append(
+                    tarjeta_publicacion(
+                        nombre=f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}",
+                        id_publicacion=publicacion.get("publicacion_id", "N/A"),
+                        profesion=publicacion.get("tipo_categoria", "N/A"),
+                        descripcion=publicacion.get("descripcion_publicacion", "N/A"),
+                        costo=publicacion.get("precio", "N/A"),
+                        categoria=publicacion.get("nombre_subcategoria", "N/A"),
+                        calificacion_estrellas=publicacion.get("calificacion_estrellas", 3)
+                    )
                 )
-            )
         return tarjetas
 
 
-    VISIBLE_CARDS = 5
-    start_index = 0
-    tarjetas_container = ft.Row(spacing=20, expand=True, wrap=False, scroll=None)
 
-    tarjetas = obtener_publicacion(page)
 
-    def actualizar_tarjetas():
-        nonlocal  tarjetas
-        tarjetas_container.controls = [tarjetas[(start_index + i) % len(tarjetas)] for i in range(VISIBLE_CARDS)]
-        page.update()
 
-    def siguiente(e):
-        nonlocal start_index
-        start_index = (start_index + VISIBLE_CARDS) % len(tarjetas)
-        actualizar_tarjetas()
 
-    def anterior(e):
-        nonlocal start_index
-        start_index = (start_index - VISIBLE_CARDS + len(tarjetas)) % len(tarjetas)
-        actualizar_tarjetas()
+    #---------------------------------------------
 
-    actualizar_tarjetas()
 
-    publicaciones_list_container = ft.Container(
+
+
+    # Filtros
+    id_publicacion_field = ft.TextField(label="ID publicación", width=120)
+    categoria_dropdown = ft.Dropdown(
+        options=[
+            ft.dropdown.Option("Todas"),
+            ft.dropdown.Option("Reparación y Mantenimiento"),
+            ft.dropdown.Option("Cuidado y Asistencia"),
+            ft.dropdown.Option("Bienestar de Mascotas"),
+            ft.dropdown.Option("Educativos y aprendizaje"),
+            ft.dropdown.Option("Hogar y Limpieza"),
+            ft.dropdown.Option("Construcción y Remodelación"),
+            ft.dropdown.Option("Artísticos y creatividad visual"),
+            ft.dropdown.Option("Movilidad y transporte"),
+            ft.dropdown.Option("Gastronomía"),
+            ft.dropdown.Option("Eventos"),
+            ft.dropdown.Option("Bienestar Personal"),
+
+        ],
+        label="Categorías",
+        width=120,
+    )
+
+
+
+
+    # Contenedor para los filtros
+    filtros = ft.Container(
         content=ft.Column(
             [
-                ft.Container(
-                    content=ft.Text(
-                        "Todas las publicaciones",
-                        size=22,
-                        weight=ft.FontWeight.BOLD,
-                        color=PRIMARY_COLOR,
-                    ),
-                    padding=ft.padding.only(left=-240),
-                ),
-                ft.Container(content=tarjetas_container, padding=30, margin=0),
-                ft.Row([
-                    ft.IconButton(icon=ft.Icons.ARROW_BACK_IOS_NEW, on_click=anterior, icon_size=40,
-                                  icon_color=PRIMARY_COLOR),
-                    ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40,
-                                  icon_color=PRIMARY_COLOR),
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=520),
+                ft.Text("Filtrar por:", weight=ft.FontWeight.BOLD, size=14, color=TEXT_COLOR),
+                ft.Row([  # Filtro de ID publicación
+                    ft.Text("ID publicación", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
+                    id_publicacion_field,
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                ft.Row([  # Filtro de Categoría
+                    ft.Text("Categorías", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
+                    categoria_dropdown,
+                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+
             ],
-            spacing=10,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=8,
+        ),
+        padding=12,
+        bgcolor=CARD_BACKGROUND,
+        height=250,
+        width=260,
+        border=ft.border.all(1, BORDER_COLOR),
+        border_radius=ft.border_radius.all(16),
+    )
+
+    # Solo una vez
+    total_publicaciones_text = ft.Text(f"Total publicaciones: 0", size=14, color=TEXT_COLOR)
+    mensaje_error = ft.Text("", color=ft.Colors.RED)
+
+    # Contenedor para las tarjetas
+    publicaciones_list_containers = ft.Container(
+        content=ft.Column(
+            controls=[tarjetas_container, mensaje_error],
         ),
         expand=True,
-        padding=ft.padding.only(left=0, right=0, top=12, bottom=0)
+        padding=ft.padding.only(left=20, top=0),
     )
-    total_publicaciones = len(tarjetas)
+
+    # Contenedor de paginación
+    paginacion_controls = ft.Row(
+        controls=[
+            ft.IconButton(
+                icon=ft.Icons.ARROW_BACK_IOS_NEW,
+                on_click=anterior,
+                icon_size=40,
+                icon_color=PRIMARY_COLOR,
+                tooltip="Anterior",
+            ),
+            ft.IconButton(
+                icon=ft.Icons.ARROW_FORWARD_IOS,
+                on_click=siguiente,
+                icon_size=40,
+                icon_color=PRIMARY_COLOR,
+                tooltip="Siguiente",
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=20,
+    )
+
+    # Contenedor para el título
+    titulo_container = ft.Container(
+        content=ft.Text(
+            "Todas las publicaciones",
+            size=22,
+            weight=ft.FontWeight.BOLD,
+            color=PRIMARY_COLOR,
+        ),
+        alignment=ft.alignment.center,  # Asegura que el título esté centrado
+        padding=ft.padding.only(left=0),  # Ajustar el padding
+    )
+
+
+
+    # Estructura final de la columna de publicaciones
+    publicaciones_list_container = ft.Container(
+        content=ft.Column(
+            controls=[titulo_container, publicaciones_list_containers, paginacion_controls],
+        ),
+        expand=True,
+        padding=ft.padding.only(left=20, top=0),
+    )
+
+    # -----------------------------
+
+    # Función para actualizar el total de publicaciones
+    def actualizar_total_publicaciones(total_real):
+        total_publicaciones_text.value = f"Total publicaciones: {total_real}"
+        total_publicaciones_text.update()
+
+    def cargar_publicaciones_iniciales(page):
+        global tarjetas_todas, tarjetas_actuales, start_index
+        tarjetas_todas = obtener_publicacion(page, None, None)  # sin filtros
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(page, start_index, tarjetas_actuales)
+        page.update()
+
+
+
+
+    def aplicar_filtros(e):
+        global tarjetas_filtradas, tarjetas_actuales, start_index
+        id_pub = id_publicacion_field.value.strip() if id_publicacion_field.value else None
+        categoria = categoria_dropdown.value.strip() if categoria_dropdown.value else None
+
+
+        if not id_pub:
+            id_pub = None
+
+        if categoria == "Todas":
+            categoria = None
+
+        print(f"ID: {id_pub}, Categoria: {categoria}")
+
+        tarjetas_filtradas = obtener_publicacion(e.page, id_pub, categoria)
+        tarjetas_actuales = tarjetas_filtradas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+    def eliminar_filtros(e):
+        global tarjetas_todas, tarjetas_actuales, start_index
+
+        tarjetas_todas = obtener_publicacion(e.page, None, None)
+
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+
+    filtros.content.controls.extend([
+        ft.ElevatedButton(
+            text="Aplicar filtros",
+            icon=ft.Icons.FILTER_ALT,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=aplicar_filtros
+        ),
+        ft.ElevatedButton(
+            text="Eliminar filtros",
+            icon=ft.Icons.CLEAR,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=eliminar_filtros
+        ),
+
+    ])
+
+    # Contenedor principal
     main_content = ft.Row(
-        [
+        controls=[
             ft.Container(
-                content=ft.Column([filtros,
-                                   ft.Text(f"Total publicaciones: {VISIBLE_CARDS}/{total_publicaciones}", size=14,   color=TEXT_COLOR)]),
+                content=ft.Column(
+                    [filtros, total_publicaciones_text]
+                ),
                 padding=ft.padding.only(top=85),
             ),
-            ft.Container(
-                content=publicaciones_list_container,
-                expand=True,
-                padding=ft.padding.only(left=20, top=0),
-            ),
+            publicaciones_list_container,
         ],
         expand=True,
         vertical_alignment=ft.CrossAxisAlignment.START,
         spacing=20,
     )
 
+
+
     page.add(header, tabs, main_content,confirm_dialog)
 
+    # Cargar publicaciones iniciales **después** de agregar el control a la página
+    cargar_publicaciones_iniciales(page)
 
 if __name__ == "__main__":
     ft.app(target=main)

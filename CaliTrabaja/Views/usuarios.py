@@ -481,7 +481,15 @@ def main(page: ft.Page):
             if isinstance(usuario, dict):
                 nombre = f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}"
                 rol = usuario.get("tipo_rol", "N/A")
-                categoria = usuario.get("tipo_categoria", "N/A")
+
+                # Formatear lista de categorías
+                categorias_lista = usuario.get("categorias", [])
+
+                if isinstance(categorias_lista, list):
+                    categoria = ", ".join(categorias_lista) if categorias_lista else "N/A"
+                else:
+                    categoria = categorias_lista or "N/A"
+
                 estado = usuario.get("estado", "N/A")
                 registro = usuario.get("fecha_registro", "N/A")
                 correo = usuario.get("correo", "N/A")
@@ -489,18 +497,7 @@ def main(page: ft.Page):
                 publicaciones = usuario.get("publicaciones", 0)
                 reportes = usuario.get("reportes", 0)
                 rating = usuario.get("rating", 0)
-            else:
-                # Si no es diccionario, usamos valores por defecto
-                nombre = str(usuario)
-                rol = "N/A"
-                categoria = "N/A"
-                estado = "N/A"
-                registro = "N/A"
-                correo = "N/A"
-                id_user = "N/A"
-                publicaciones = 0
-                reportes = 0
-                rating = 0
+
 
             tarjetas.append(
                 tarjeta_usuario(
