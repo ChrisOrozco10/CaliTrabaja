@@ -10,6 +10,7 @@ from CaliTrabaja.API_services.obtener_usuarios import gestionar_usuarios_admin
 from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 
 def main(page: ft.Page):
+    global  tarjetas_container, tarjetas
 
     correo="jupahure@gmail.com"
     contrasena="A1234567"
@@ -247,119 +248,51 @@ def main(page: ft.Page):
         padding=5,
         margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
     )
+    # ---------------- Variables de los filtros ----------------
+    id_usuario_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    nombre_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    apellido_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    correo_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
 
-    # --------------------------- Panel de filtros --------------------------
-    filtros = ft.Container(
-        content=ft.Column(
-            spacing=8,
-            controls=[
-                ft.Text("Filtrar por:", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
+    rol_dropdown = ft.Dropdown(
+        width=120, text_size=12, border_radius=5, value="Todos",
+        options=[ft.dropdown.Option(o) for o in ["Todos", "experto", "cliente", "admin"]],
+    )
 
-                # --- ID usuario ---
-                ft.Row(
-                    controls=[
-                        ft.Text("ID usuario", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
+    estado_dropdown = ft.Dropdown(
+        width=120, text_size=12, border_radius=5, value="Todos",
+        options=[ft.dropdown.Option(o) for o in ["Todos", "activo", "deshabilitado"]],
+    )
 
-                # --- Nombre ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Nombre", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
+    publicaciones_dropdown = ft.Dropdown(
+        width=120, text_size=12, border_radius=5, value="Todas",
+        options=[ft.dropdown.Option(o) for o in ["Todas", "1", "2"]],
+    )
 
-                # --- Apellido ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Apellido", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-
-                # --- Correo ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Correo", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-
-                # --- Rol ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Rol", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.Dropdown(
-                            width=120, text_size=12, border_radius=5, value="Todos",
-                            options=[ft.dropdown.Option(o) for o in ["Todos", "Experto", "Cliente", "Admin"]],
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-
-                # --- Estado ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Estado", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.Dropdown(
-                            width=120, text_size=12, border_radius=5, value="Todos",
-                            options=[ft.dropdown.Option(o) for o in ["Todos", "Activo", "Deshabilitado"]],
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-
-                # --- Publicaciones ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Publicaciones", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.Dropdown(
-                            width=120, text_size=12, border_radius=5, value="Todas",
-                            options=[ft.dropdown.Option(o) for o in ["Todas", "1", "2"]],
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-                # --- Categorías ---
-                ft.Row(
-                    controls=[
-                        ft.Text("Categorías", size=14, weight=ft.FontWeight.BOLD,
-                                color=TEXT_COLOR, expand=True),
-                        ft.Dropdown(
-                            width=120, text_size=12, border_radius=5, value="Todas",
-                            options=[ft.dropdown.Option(o) for o in [
-                                "Todas", "Electricista", "Plomero", "Carpintero", "Jardinero",
-                                "Cerrajero", "Pintor", "Niñera", "Tecnólogo en sistemas",
-                                "Técnico automotriz", "Gasodomésticos"]],
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                ),
-            ],
-        ),
-        padding=12,
-        bgcolor=CARD_BACKGROUND,
-        width=260,
-        border=ft.border.all(1, BORDER_COLOR),
-        border_radius=ft.border_radius.all(16),
+    categorias_dropdown = ft.Dropdown(
+        width=120, text_size=12, border_radius=5, value="Todas",
+        options=[
+            ft.dropdown.Option("Todas"),
+            ft.dropdown.Option("Reparación y Mantenimiento"),
+            ft.dropdown.Option("Cuidado y Asistencia"),
+            ft.dropdown.Option("Bienestar de Mascotas"),
+            ft.dropdown.Option("Educativos y aprendizaje"),
+            ft.dropdown.Option("Hogar y Limpieza"),
+            ft.dropdown.Option("Construcción y Remodelación"),
+            ft.dropdown.Option("Artísticos y creatividad visual"),
+            ft.dropdown.Option("Movilidad y transporte"),
+            ft.dropdown.Option("Gastronomía"),
+            ft.dropdown.Option("Eventos"),
+            ft.dropdown.Option("Bienestar Personal"),
+        ],
     )
 
 
 
-    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating):
+
+
+
+    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating=3):
 
 
         controls = [
@@ -456,8 +389,70 @@ def main(page: ft.Page):
             height=400,
             width=400,
         )
+        # -----------------------------------------------------------------
 
-    def obtener_usuario(page):
+        # Contenedor para las tarjetas (inicialmente vacío)
+
+    tarjetas_container = ft.Row(
+        controls=[],  # Inicia el Row vacío
+        spacing=10,
+        alignment=ft.MainAxisAlignment.START,
+        wrap=False,  # Cambié a True para que las tarjetas puedan ocupar varias filas si es necesario
+        expand=True
+    )
+
+
+    CARD_WIDTH = 400
+    CARD_SPACING = 20
+    VISIBLE_CARDS = 2
+    CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
+
+    # Distancia exacta entre flechas (una tarjeta + su separación)
+    ARROW_SPACING = CARD_WIDTH + CARD_SPACING  # 300 px
+
+    tarjetas_todas = []
+    tarjetas_filtradas = []
+    tarjetas_actuales = []  # <- Lista activa
+    start_index = 0
+
+
+
+    def actualizar_tarjetas(page, start_index, tarjetas_lista):
+        tarjetas_container.controls.clear()
+
+        if not tarjetas_lista:
+            tarjetas_container.controls.append(ft.Text("No hay usuarios disponibles.", key="error_msg"))
+            total_usuarios = 0
+        else:
+            # Mostrar las visibles según el índice
+            visibles = tarjetas_lista[start_index:start_index + VISIBLE_CARDS]
+            tarjetas_container.controls.extend(visibles)
+            total_usuarios = len(tarjetas_lista)
+
+        actualizar_total_usuarios(total_usuarios)
+        page.update()
+
+    def siguiente(e):
+        global start_index, tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+                start_index += VISIBLE_CARDS
+            else:
+                start_index = 0
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+    def anterior(e):
+        global start_index, tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
+                start_index -= VISIBLE_CARDS
+            else:
+                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
+                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+    def obtener_usuario(page, id_usu=None, nombre=None,apellido=None, correo=None, rol=None, estado=None, categoria= None, publicaciones=None ):
         # Obtener el token de la sesión
 
 
@@ -466,98 +461,151 @@ def main(page: ft.Page):
             page.add(ft.Text("Debe iniciar sesión primero"))
             return
 
+        filtros = {}
+        if id_usu:
+            filtros["usuario_id"] = id_usu
+        if nombre:
+            filtros["primer_nombre"] = nombre
+        if apellido:
+            filtros["primer_apellido"] = apellido
+        if correo:
+            filtros["correo"] = correo
+        if rol and rol != "Todos":
+            filtros["tipo_rol"] = rol
+        if estado and estado != "Todos":
+            filtros["estado"] = estado
+
+        if publicaciones and publicaciones != "Todos":
+            filtros["destacada"] = publicaciones
+
+        if categoria and categoria != "Todas":
+            filtros["tipo_categoria"] = categoria
+
+        # Verificar los filtros antes de hacer la llamada a la API
+        print("📌 Filtros enviados a la API:", filtros)
+
+
         # Traer los usuarios desde la API
-        usuarios = gestionar_usuarios_admin(token)
+        usuarios = gestionar_usuarios_admin(token, filtros)
         print("Usuarios recibidos de la API:", usuarios)
-        if not usuarios:
-            return [ft.Text("No se pudo obtener usuarios")]
 
+        # Crear las tarjetas con la información obtenida
         tarjetas = []
-
-
-
         for usuario in usuarios:
             # Si usuario es un diccionario, usamos .get(), si no, asumimos que es un string
             if isinstance(usuario, dict):
-                nombre = f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}"
-                rol = usuario.get("tipo_rol", "N/A")
-
-                # Formatear lista de categorías
-                categorias_lista = usuario.get("categorias", [])
-
-                if isinstance(categorias_lista, list):
-                    categoria = ", ".join(categorias_lista) if categorias_lista else "N/A"
-                else:
-                    categoria = categorias_lista or "N/A"
-
-                estado = usuario.get("estado", "N/A")
-                registro = usuario.get("fecha_registro", "N/A")
-                correo = usuario.get("correo", "N/A")
-                id_user = usuario.get("usuario_id", "N/A")
-                publicaciones = usuario.get("publicaciones", 0)
-                reportes = usuario.get("reportes", 0)
-                rating = usuario.get("rating", 0)
-
-
-            tarjetas.append(
-                tarjeta_usuario(
-                    nombre=nombre,
-                    rol = rol,
-                    categoria = categoria,
-                    estado = estado,
-                    fecha= registro,
-                    correo = correo,
-                    id_user= id_user,
-                    publicaciones=publicaciones,
-                    reportes=reportes,
-                    rating=rating
+                tarjetas.append(
+                    tarjeta_usuario(
+                        id_user=f"{usuario.get('usuario_id', 'N/A')}",
+                        nombre=f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}",
+                        rol=usuario.get('tipo_rol', 'N/A'),
+                        estado=usuario.get('estado', 'N/A'),
+                        fecha=usuario.get('fecha_registro', 'N/A'),
+                        correo=usuario.get('correo', 'N/A'),
+                        publicaciones=usuario.get('publicaciones', 0),
+                        reportes=usuario.get('reportes', 0),
+                        categoria = ", ".join(usuario.get('categorias', [])) if usuario.get('categorias') else "N/A"
+                    )
                 )
-            )
         return tarjetas
 
+    #------------------------------------------------------------
+
+
+    filtros = ft.Container(
+            content=ft.Column(
+                spacing=8,
+                controls=[
+                    ft.Text("Filtrar por:", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
+
+                    # --- ID usuario ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("ID usuario", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            id_usuario_field,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Nombre ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Nombre", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            nombre_field,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Apellido ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Apellido", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            apellido_field,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Correo ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Correo", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            correo_field,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Rol ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Rol", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            rol_dropdown,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Estado ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Estado", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            estado_dropdown,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+
+                    # --- Publicaciones ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Publicaciones", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            publicaciones_dropdown,
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                    # --- Categorías ---
+                    ft.Row(
+                        controls=[
+                            ft.Text("Categorías", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
+                            categorias_dropdown
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    ),
+                ],
+            ),
+            padding=12,
+            bgcolor=CARD_BACKGROUND,
+            width=260,
+            border=ft.border.all(1, BORDER_COLOR),
+            border_radius=ft.border_radius.all(16),
+        )
+
+    # Solo una vez
+    total_usuarios_text = ft.Text(f"Total usuarios: 0", size=14, color=TEXT_COLOR)
+    mensaje_error = ft.Text("", color=ft.Colors.RED)
 
 
 
-    # -------------------- Carrusel -----------------------------------------
-    CARD_WIDTH     = 400
-    CARD_SPACING   = 20
-    VISIBLE_CARDS  = 3
-    CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
-    # Distancia exacta entre flechas (una tarjeta + su separación)
-    ARROW_SPACING  = CARD_WIDTH + CARD_SPACING      # 300 px
 
-    start_index = 0
 
-    tarjetas_row = ft.Row(spacing=CARD_SPACING)
-    tarjetas_container = ft.Container(
-        width=CAROUSEL_WIDTH,
-        alignment=ft.alignment.center,
-        content=tarjetas_row,
-    )
-    tarjetas = obtener_usuario(page)  # Defínelo primero
-
-    def actualizar_tarjetas():
-        nonlocal tarjetas
-        tarjetas_row.controls = [
-            tarjetas[(start_index + i) % len(tarjetas)]
-            for i in range(VISIBLE_CARDS)
-        ]
-        page.update()
-
-    def siguiente(e):
-        nonlocal start_index
-        if len(tarjetas) > VISIBLE_CARDS:
-            start_index = (start_index + VISIBLE_CARDS) % len(tarjetas)
-            actualizar_tarjetas()
-
-    def anterior(e):
-        nonlocal start_index
-        if len(tarjetas) > VISIBLE_CARDS:
-            start_index = (start_index - VISIBLE_CARDS) % len(tarjetas)
-            actualizar_tarjetas()
-
-    actualizar_tarjetas()
 
     # Flechas en color PRIMARY_COLOR y con icon_size 40 px
     btn_prev = ft.IconButton(
@@ -589,33 +637,154 @@ def main(page: ft.Page):
         spacing=25,
         alignment=ft.MainAxisAlignment.CENTER,
     )
-
-    # -------------------- Contenido principal ------------------------------
-    reportes_container = ft.Column(
-        spacing=20,
-        controls=[
-            ft.Text("Todos los usuarios", size=22, weight=ft.FontWeight.BOLD, color=PRIMARY_COLOR),
-            carrusel,
-
-        ],
-
+    # Contenedor para el título
+    titulo_container = ft.Container(
+        content=ft.Text(
+            "Todas los usuarios",
+            size=22,
+            weight=ft.FontWeight.BOLD,
+            color=PRIMARY_COLOR,
+        ),
+        alignment=ft.alignment.center,  # Asegura que el título esté centrado
+        padding=ft.padding.only(left=0),  # Ajustar el padding
     )
 
-    total_usuarios = len(tarjetas)
-    filtros_y_total = ft.Column([
-        filtros,
-        ft.Container(
-            content=ft.Text(f"Total de usuarios: {total_usuarios}", size=14, color=TEXT_COLOR),
-            padding=ft.padding.only(top=20),
-            alignment=ft.alignment.center,
-        )
-    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-    main_content = ft.ResponsiveRow([
-        ft.Container(content=filtros_y_total, col={'sm': 12, 'md': 4, 'lg': 3}),
-        ft.Container(content=reportes_container, col={'sm': 12, 'md': 8, 'lg': 9}),
-    ], spacing=20)
+    # Estructura final de la columna de publicaciones
+    usuarios_list_container = ft.Container(
+        content=ft.Column(
+            controls=[titulo_container, carrusel],
+        ),
+        expand=True,
+        padding=ft.padding.only(left=20, top=0),
+    )
+
+
+
+    # Función para actualizar el total de publicaciones
+    def actualizar_total_usuarios(total_real):
+        total_usuarios_text.value = f"Total usuarios: {total_real}"
+        total_usuarios_text.update()
+
+    def cargar_usuarios_iniciales(page):
+        global tarjetas_todas, tarjetas_actuales, start_index
+        tarjetas_todas = obtener_usuario(page, None, None, None, None, None, None, None, None)  # sin filtros
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(page, start_index, tarjetas_actuales)
+        page.update()
+
+
+    def aplicar_filtros(e):
+        global tarjetas_filtradas, tarjetas_actuales, start_index
+        id_usu = id_usuario_field.value.strip() if id_usuario_field.value else None
+        nombre = nombre_field.value.strip() if nombre_field.value else None
+        apellido = apellido_field.value.strip() if apellido_field.value else None
+        correo = correo_field.value.strip() if correo_field.value else None
+        rol = rol_dropdown.value.strip() if rol_dropdown.value else None
+        estado = estado_dropdown.value.strip() if estado_dropdown.value else None
+        publicaciones= publicaciones_dropdown.value.strip() if publicaciones_dropdown.value else None
+        categoria = categorias_dropdown.value.strip() if categorias_dropdown.value else None
+
+
+
+        if not id_usu:
+            id_usu = None
+
+        if not nombre:
+            nombre = None
+
+        if not apellido:
+            apellido = None
+
+        if not correo:
+            correo = None
+
+        if rol == "Todas":
+            rol = None
+
+        if estado == "Todos":
+            estado = None
+
+        if publicaciones == "Todas":
+            publicaciones = None
+
+
+        if categoria == "Todas":
+            categoria = None
+
+        print(f"ID: {id_usu}, Nombre: {nombre}, Apellido: {apellido}, Correo: {correo}, Rol: {rol}, Estado: {estado}, Publicaciones: {publicaciones} Categoria: {categoria}")
+
+        tarjetas_filtradas = obtener_usuario(e.page, id_usu, nombre, apellido, correo, rol, estado, categoria, publicaciones)
+        tarjetas_actuales = tarjetas_filtradas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+    def eliminar_filtros(e):
+        global tarjetas_todas, tarjetas_actuales, start_index
+
+        tarjetas_todas = tarjetas_todas = obtener_usuario(page, None, None, None, None, None, None, None, None)  # sin filtros
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+
+    filtros.content.controls.extend([
+        ft.ElevatedButton(
+            text="Aplicar filtros",
+            icon=ft.Icons.FILTER_ALT,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=aplicar_filtros
+        ),
+        ft.ElevatedButton(
+            text="Eliminar filtros",
+            icon=ft.Icons.CLEAR,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=eliminar_filtros
+        ),
+    ])
+
+
+    # -------------------- Contenido principal ------------------------------
+
+    # Contenedor principal
+    main_content = ft.Row(
+        controls=[
+            ft.Container(
+                content=ft.Column(
+                    [filtros, total_usuarios_text]
+                ),
+                padding=ft.padding.only(top=85),
+            ),
+            usuarios_list_container,
+        ],
+        expand=True,
+        vertical_alignment=ft.CrossAxisAlignment.START,
+        spacing=20,
+    )
 
     page.add(header, tabs, main_content,confirm_dialog)
+
+    # Cargar usuarios iniciales **después** de agregar el control a la página
+    cargar_usuarios_iniciales(page)
 
 
 if __name__ == "__main__":

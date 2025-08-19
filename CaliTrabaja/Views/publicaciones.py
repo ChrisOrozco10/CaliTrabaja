@@ -443,11 +443,6 @@ def main(page: ft.Page):
 
 
 
-
-
-
-
-
     #------------------------------------------------
     VISIBLE_CARDS = 5
     start_index = 0

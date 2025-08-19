@@ -17,7 +17,7 @@ def gestionar_publicaciones_admin(token, filtros=None):
         resultado = response.json()  # Convierte la respuesta JSON a dict
 
         if not resultado.get("success", False):
-            print("Error al obtener usuarios:", resultado.get("message"))
+            print("Error al obtener publicaciones:", resultado.get("message"))
             return []
 
         return resultado.get("lista_publicaciones", [])

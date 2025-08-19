@@ -2,13 +2,13 @@ import requests
 
 BASE_URL = "http://127.0.0.1:5000/api"
 
-def gestionar_usuarios_admin(token):
+def gestionar_usuarios_admin(token, filtros = None):
     url = f"{BASE_URL}/gestion_usuarios_admin"
     headers = {
         "Authorization": f"Bearer {token}"
     }
     try:
-        response = requests.post(url, headers=headers)
+        response = requests.post(url, headers=headers, json=filtros if filtros else {})
         # Verificar que la respuesta no esté vacía
         if response.status_code != 200 or not response.text:
             print("Error al conectar con la API o respuesta vacía")
