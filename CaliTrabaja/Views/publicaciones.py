@@ -279,7 +279,7 @@ def main(page: ft.Page):
 
 
 
-    def tarjeta_publicacion(id_publicacion, nombre, profesion, descripcion, costo, categoria, calificacion_estrellas=3):
+    def tarjeta_publicacion(id_publicacion, nombre, descripcion, costo, categoria, calificacion_estrellas=3):
         def get_stars(rating):
             return ft.Row(
                 [
@@ -355,7 +355,6 @@ def main(page: ft.Page):
                                 controls=[
                                     ft.Text(nombre, size=16, weight=ft.FontWeight.BOLD, color="#333333"),
                                     get_stars(calificacion_estrellas),
-                                    ft.Text(profesion, color="#777777", size=13),
                                 ]
                             ),
                         ]
@@ -445,24 +444,31 @@ def main(page: ft.Page):
 
     #------------------------------------------------
     VISIBLE_CARDS = 5
-    start_index = 0
-    tarjetas_todas = []
-    tarjetas_filtradas = []
-    tarjetas_actuales = [] # <- Lista activa
-
+    CARD_WIDTH = 280
+    CARD_HEIGHT = 390
+    CARD_SPACING = 10
+    CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
     def actualizar_tarjetas(page, start_index, tarjetas_lista):
-
         tarjetas_container.controls.clear()
 
         if not tarjetas_lista:
-            tarjetas_container.controls.append(ft.Text("No hay publicaciones disponibles.", key="error_msg"))
+            # Mantener altura y ancho fijo para que el carrusel no se suba
+            tarjetas_container.controls.append(
+                ft.Container(
+                    content=ft.Text("No hay publicaciones disponibles.", color="red"),
+                    alignment=ft.alignment.center,
+                    width=CAROUSEL_WIDTH,  # mismo ancho del carrusel
+                    height=CARD_HEIGHT,  # misma altura de las tarjetas
+                )
+            )
             total_publicaciones = 0
         else:
             # Mostrar las visibles según el índice
             visibles = tarjetas_lista[start_index:start_index + VISIBLE_CARDS]
             tarjetas_container.controls.extend(visibles)
             total_publicaciones = len(tarjetas_lista)
+
 
 
         actualizar_total_publicaciones(total_publicaciones)
@@ -473,22 +479,23 @@ def main(page: ft.Page):
         global start_index,  tarjetas_actuales
 
         if tarjetas_actuales:
-            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  #  Avanzar normal
                 start_index += VISIBLE_CARDS
             else:
                 start_index = 0
             actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
-
     def anterior(e):
-        global start_index,  tarjetas_actuales
+        global start_index, tarjetas_actuales
 
         if tarjetas_actuales:
-            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
+            if start_index - VISIBLE_CARDS >= 0:  # Retrocede normal
                 start_index -= VISIBLE_CARDS
             else:
-                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
-                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # Va al final si retrocede demasiado
+
+            #  siempre actualizar
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
 
     def obtener_publicacion(page, id_pub=None, categoria=None):
@@ -505,7 +512,7 @@ def main(page: ft.Page):
             filtros["tipo_categoria"] = categoria
 
         # Verificar los filtros antes de hacer la llamada a la API
-        print("📌 Filtros enviados a la API:", filtros)
+        print(" Filtros enviados a la API:", filtros)
 
         # Llamar a la API para obtener las publicaciones
         publicaciones = gestionar_publicaciones_admin(token, filtros)
@@ -523,7 +530,6 @@ def main(page: ft.Page):
                     tarjeta_publicacion(
                         nombre=f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}",
                         id_publicacion=publicacion.get("publicacion_id", "N/A"),
-                        profesion=publicacion.get("tipo_categoria", "N/A"),
                         descripcion=publicacion.get("descripcion_publicacion", "N/A"),
                         costo=publicacion.get("precio", "N/A"),
                         categoria=publicacion.get("nombre_subcategoria", "N/A"),
@@ -636,7 +642,7 @@ def main(page: ft.Page):
             color=PRIMARY_COLOR,
         ),
         alignment=ft.alignment.center,  # Asegura que el título esté centrado
-        padding=ft.padding.only(left=0),  # Ajustar el padding
+        padding=ft.padding.only(left=-300),  # Ajustar el padding
     )
 
 
@@ -718,37 +724,50 @@ def main(page: ft.Page):
         ft.ElevatedButton(
             text="Aplicar filtros",
             icon=ft.Icons.FILTER_ALT,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"), color="#333333",
+            ),
             on_click=aplicar_filtros
         ),
         ft.ElevatedButton(
             text="Eliminar filtros",
             icon=ft.Icons.CLEAR,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"), color="#333333",
+            ),
             on_click=eliminar_filtros
         ),
 
     ])
 
     # Contenedor principal
-    main_content = ft.Row(
-        controls=[
-            ft.Container(
-                content=ft.Column(
-                    [filtros, total_publicaciones_text]
+    main_content = ft.Container(
+        padding=ft.padding.only(top=20),  # altura general
+        content=ft.Row(
+            controls=[
+                # FILTROS DE PUBLICACIONES
+                ft.Container(
+                    margin=ft.margin.only(top=40),  #  baja solo el menú de filtrar
+                    content=ft.Column(
+                        [filtros, total_publicaciones_text],
+                        alignment=ft.MainAxisAlignment.START,
+                        spacing=10
+                    ),
+                    expand=False,
+                    alignment=ft.alignment.top_center,
                 ),
-                padding=ft.padding.only(top=85),
-            ),
-            publicaciones_list_container,
-        ],
-        expand=True,
-        vertical_alignment=ft.CrossAxisAlignment.START,
-        spacing=20,
+                # TARJETAS DE PUBLICACIONES (el carrusel)
+                publicaciones_list_container,
+            ],
+            expand=True,
+            vertical_alignment=ft.CrossAxisAlignment.START,
+            spacing=20,
+        )
     )
-
-
 
     page.add(header, tabs, main_content,confirm_dialog)
 

@@ -351,31 +351,6 @@ def main(page: ft.Page):
                 for i in range(5)
             ]))
             controls.insert(2, ft.Text(f"Categoría: {categoria}", size=18, color="#333333"))
-            controls.append(
-                ft.Row(
-                    spacing=15,
-                    controls=[
-                        ft.ElevatedButton(
-                            f"Publicaciones {publicaciones}",
-                            bgcolor="#F5F5F5",
-                            color="#333333",
-                            style=ft.ButtonStyle(
-                                side=ft.BorderSide(width=2, color="#2FBDB3"),
-                                shape=ft.RoundedRectangleBorder(radius=20),
-                            ),
-                        ),
-                        ft.ElevatedButton(
-                            f"Reportes {reportes}",
-                            bgcolor="#F5F5F5",
-                            color="#333333",
-                            style=ft.ButtonStyle(
-                                side=ft.BorderSide(width=2, color="#D9D9D9"),
-                                shape=ft.RoundedRectangleBorder(radius=20),
-                            ),
-                        ),
-                    ],
-                )
-            )
 
         return ft.Container(
             bgcolor="#FFFFFF",
@@ -387,7 +362,7 @@ def main(page: ft.Page):
             border_radius=10,
             border=ft.border.all(1, "#DDDDDD"),
             height=400,
-            width=400,
+            width=380,
         )
         # -----------------------------------------------------------------
 
@@ -402,9 +377,9 @@ def main(page: ft.Page):
     )
 
 
-    CARD_WIDTH = 400
+    CARD_WIDTH =380
     CARD_SPACING = 20
-    VISIBLE_CARDS = 2
+    VISIBLE_CARDS = 4
     CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
     # Distancia exacta entre flechas (una tarjeta + su separación)
@@ -415,13 +390,19 @@ def main(page: ft.Page):
     tarjetas_actuales = []  # <- Lista activa
     start_index = 0
 
-
-
     def actualizar_tarjetas(page, start_index, tarjetas_lista):
         tarjetas_container.controls.clear()
 
         if not tarjetas_lista:
-            tarjetas_container.controls.append(ft.Text("No hay usuarios disponibles.", key="error_msg"))
+            # Mantener altura y ancho fijo para que el carrusel no se suba
+            tarjetas_container.controls.append(
+                ft.Container(
+                    content=ft.Text("No hay usuarios disponibles.", color="red"),
+                    alignment=ft.alignment.center,
+                    width=CAROUSEL_WIDTH,  # mismo ancho del carrusel
+                    height=400,  # misma altura de las tarjetas
+                )
+            )
             total_usuarios = 0
         else:
             # Mostrar las visibles según el índice
@@ -436,7 +417,7 @@ def main(page: ft.Page):
         global start_index, tarjetas_actuales
 
         if tarjetas_actuales:
-            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  #  Avanzar normal
                 start_index += VISIBLE_CARDS
             else:
                 start_index = 0
@@ -446,11 +427,13 @@ def main(page: ft.Page):
         global start_index, tarjetas_actuales
 
         if tarjetas_actuales:
-            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
+            if start_index - VISIBLE_CARDS >= 0:  #  Retrocede normal
                 start_index -= VISIBLE_CARDS
             else:
-                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
-                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  #  Va al final si retrocede demasiado
+
+            #  siempre actualizar
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
     def obtener_usuario(page, id_usu=None, nombre=None,apellido=None, correo=None, rol=None, estado=None, categoria= None, publicaciones=None ):
         # Obtener el token de la sesión
@@ -482,7 +465,7 @@ def main(page: ft.Page):
             filtros["tipo_categoria"] = categoria
 
         # Verificar los filtros antes de hacer la llamada a la API
-        print("📌 Filtros enviados a la API:", filtros)
+        print(" Filtros enviados a la API:", filtros)
 
 
         # Traer los usuarios desde la API
@@ -590,7 +573,7 @@ def main(page: ft.Page):
                     ),
                 ],
             ),
-            padding=12,
+            padding=10,
             bgcolor=CARD_BACKGROUND,
             width=260,
             border=ft.border.all(1, BORDER_COLOR),
@@ -640,13 +623,13 @@ def main(page: ft.Page):
     # Contenedor para el título
     titulo_container = ft.Container(
         content=ft.Text(
-            "Todas los usuarios",
+            "Todos los usuarios",
             size=22,
             weight=ft.FontWeight.BOLD,
             color=PRIMARY_COLOR,
         ),
         alignment=ft.alignment.center,  # Asegura que el título esté centrado
-        padding=ft.padding.only(left=0),  # Ajustar el padding
+        padding=ft.padding.only(left=-300),  # Ajustar el padding
     )
 
     # Estructura final de la columna de publicaciones
@@ -749,16 +732,22 @@ def main(page: ft.Page):
         ft.ElevatedButton(
             text="Aplicar filtros",
             icon=ft.Icons.FILTER_ALT,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"), color="#333333",
+            ),
             on_click=aplicar_filtros
         ),
         ft.ElevatedButton(
             text="Eliminar filtros",
             icon=ft.Icons.CLEAR,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
-            on_click=eliminar_filtros
+            on_click=eliminar_filtros,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"),color="#333333",
+            ),
         ),
     ])
 
@@ -770,9 +759,13 @@ def main(page: ft.Page):
         controls=[
             ft.Container(
                 content=ft.Column(
-                    [filtros, total_usuarios_text]
+                    [filtros, total_usuarios_text],
+                    alignment=ft.MainAxisAlignment.START,
+                    spacing=10
                 ),
-                padding=ft.padding.only(top=85),
+                margin=ft.margin.only(top=39),  #  ajusta este valor (10–30) según se vea mejor
+                expand=False,
+                alignment=ft.alignment.top_center,
             ),
             usuarios_list_container,
         ],
