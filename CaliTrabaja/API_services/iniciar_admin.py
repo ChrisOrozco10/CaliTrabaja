@@ -2,7 +2,8 @@ import requests
 
 
 def iniciar_sesion_api(correo, contrasena):
-    url = "http://127.0.0.1:5000/api/iniciar_sesion_admin"
+    url = "https://juan200521.pythonanywhere.com/api/iniciar_sesion_admin"
+
     data = {"correo": correo, "contrasena": contrasena}
     response = requests.post(url, json=data)
 

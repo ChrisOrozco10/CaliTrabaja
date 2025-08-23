@@ -1,11 +1,11 @@
 import requests
 
-BASE_URL = "http://127.0.0.1:5000/api"
+BASE_URL = "https://juan200521.pythonanywhere.com"
 
 def registrar_sesion_api(correo):
     try:
         response = requests.post(
-            f"{BASE_URL}/registrar_sesion_admin",
+            f"{BASE_URL}/api/registrar_sesion_admin",
             json={"correo":correo}
         )
         return response.json()

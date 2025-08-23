@@ -6,12 +6,26 @@ import datetime
 import usuarios
 import login
 import inicio
+from CaliTrabaja.API_services.obtener_reportes import gestionar_reportes_admin
 from CaliTrabaja.Views import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
-
+from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 
 
 def main(page: ft.Page):
+    global tarjetas_container, tarjetas
+
+    correo = "jupahure@gmail.com"
+    contrasena = "A1234567"
+
+    resultado = iniciar_sesion_api(correo, contrasena)
+    if not resultado or not resultado.get("success"):
+        page.add(ft.Text("No se pudo iniciar sesión"))
+    else:
+        token = resultado.get("token")
+        setattr(page, "session_token", token)
+
+
     page.clean()
     page.fonts = {
         "Oswald": "https://raw.githubusercontent.com/google/fonts/main/ofl/oswald/Oswald%5Bwght%5D.ttf"
@@ -257,6 +271,23 @@ def main(page: ft.Page):
 
     )
 
+    #-----------------------Variable de los reportes ---------------------
+
+    id_reporte_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    fecha_reporte_field = ft.IconButton(icon=ft.Icons.CALENDAR_MONTH,  tooltip="Seleccionar fecha", on_click=lambda e: open_date_picker())
+    id_usuario_field = ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+    rol_dropdown = ft.Dropdown(
+        width=120,
+        text_size=12,
+        border_radius=5,
+        value="Todos",
+        options=[
+            ft.dropdown.Option("Todos"),
+            ft.dropdown.Option("experto"),
+            ft.dropdown.Option("cliente"),
+        ],
+    )
+
     filtros = ft.Container(
         content=ft.Column(
             [
@@ -265,29 +296,15 @@ def main(page: ft.Page):
                 ft.Row(
                     [
                         ft.Text("ID Reporte", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5),
+                        id_reporte_field,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
-
-                ft.Row(
-                    [
-                        ft.Text("Fecha Reporte", weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
-                        ft.IconButton(
-                            icon=ft.Icons.CALENDAR_MONTH,
-                            tooltip="Seleccionar fecha",
-                            on_click=lambda e: open_date_picker(),
-                        ),
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN
-                ),
-
-                selected_date_text,
 
                 ft.Row(
                     [
                         ft.Text("ID Usuario", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                        ft.TextField(width=120, height=35, text_size=12, border_radius=5)
+                        id_usuario_field,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN
                 ),
@@ -296,13 +313,7 @@ def main(page: ft.Page):
                 ft.Row(
                     controls=[
                         ft.Text("Rol", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
-                        ft.Dropdown(
-                            width=120,
-                            text_size=12,
-                            border_radius=5,
-                            value="Todos",
-                            options=[ft.dropdown.Option(o) for o in ["Todos", "Experto", "Cliente"]],
-                        ),
+                        rol_dropdown,
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 ),
@@ -316,6 +327,110 @@ def main(page: ft.Page):
         border=ft.border.all(1, BORDER_COLOR),
         border_radius=ft.border_radius.all(16),
     )
+
+    # Contenedor para las tarjetas (inicialmente vacío)
+    tarjetas_container = ft.Row(
+        controls=[],  # Inicia el Row vacío
+        spacing=10,
+        alignment=ft.MainAxisAlignment.START,
+        wrap=False,  # Cambié a True para que las tarjetas puedan ocupar varias filas si es necesario
+        expand=True
+    )
+
+    tarjetas_todas = []
+    tarjetas_filtradas = []
+    tarjetas_actuales = []  # <- Lista activa
+    VISIBLE_CARDS = 4
+    start_index = 0
+    tarjetas_container = ft.Row(
+        spacing=20,
+        expand=True,
+        wrap=False,
+        scroll=None,
+    )
+
+
+    def actualizar_tarjetas(page, start_index, tarjetas_lista):
+        tarjetas_container.controls.clear()
+
+        if not tarjetas_lista:
+            tarjetas_container.controls.append(ft.Text("No hay reportes disponibles.", key="error_msg"))
+            total_reportes = 0
+        else:
+            # Mostrar las visibles según el índice
+            visibles = tarjetas_lista[start_index:start_index + VISIBLE_CARDS]
+            tarjetas_container.controls.extend(visibles)
+            total_reportes = len(tarjetas_lista)
+
+        actualizar_total_reportes(total_reportes)
+        page.update()
+
+
+    def siguiente(e):
+        global start_index, tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+                start_index += VISIBLE_CARDS
+            else:
+                start_index = 0
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+
+    def anterior(e):
+        global start_index, tarjetas_actuales
+
+        if tarjetas_actuales:
+            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
+                start_index -= VISIBLE_CARDS
+            else:
+                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
+                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+
+
+    def obtener_reportes(page, reporte_id=None, reportador_id=None, rol=None ):
+        # Obtener el token de la sesión
+
+
+        token = getattr(page, "session_token", None)
+        if not token:
+            page.add(ft.Text("Debe iniciar sesión primero"))
+            return
+
+        filtros = {}
+        if reporte_id:
+            filtros["reporte_id"] = reporte_id
+        if reportador_id:
+            filtros["reportador_id"] = reportador_id
+        if rol and rol != "Todos":
+            filtros["tipo_rol"] = rol
+
+
+        # Verificar los filtros antes de hacer la llamada a la API
+        print("📌 Filtros enviados a la API:", filtros)
+
+
+        # Traer los reportes desde la API
+        reportes = gestionar_reportes_admin(token, filtros)
+        print("Reportes recibidos de la API:", reportes)
+
+        # Crear las tarjetas con la información obtenida
+        tarjetas = []
+        for reporte in reportes:
+            # Si reportes es un diccionario, usamos .get(), si no, asumimos que es un string
+            if isinstance(reporte, dict):
+                tarjetas.append(
+                    tarjeta_reporte(
+                        de=f"{reporte.get('reportador_nombre', 'N/A')}",
+                        para=f"{reporte.get('reportado_nombre', 'N/A')}",
+                        id_reporte=reporte.get('reporte_id', 'N/A'),
+                        full_description=reporte.get('descripcion_reporte', 'N/A')
+                    )
+                )
+        return tarjetas
+
+
 
     def tarjeta_reporte(de, para, id_reporte, full_description):
         display_description = full_description.split(' ... ')[0] if ' ... ' in full_description else full_description
@@ -417,63 +532,96 @@ def main(page: ft.Page):
             height=300,
         )
 
-    reportes_demo = [
-        {
-            "de": "Néstor",
-            "para": "Nalga Flaca",
-            "id_reporte": "09",
-            "full_description": "Se cree la del desierto y parece un jugo de papaya caliente JAJAJAJAJAJAA ... Ver más"
-        },
-        {
-            "de": "Ana",
-            "para": "Sol Melano",
-            "id_reporte": "08",
-            "full_description": "La contraté como masajista quien dice que no firei feliz.jhkbdsfyusd hsdhg b ahvsv hbdhfbsyd hud"
-        },
-        {
-            "de": "Ana",
-            "para": "Sol Melano",
-            "id_reporte": "08",
-            "full_description": "La contraté como masajista quien dice que no firei feliz.sbfdbdfuysvydfydsvydfvbsyudvfusydfgbusydfgyusbfdhbs hdsbfybdyu hsbdufbsunbb hsguydyds"
-        },
-        {
-            "de": "Ana",
-            "para": "Sol Melano",
-            "id_reporte": "08",
-            "full_description": "La contraté como masajista quien dice que no firei feliz.hjdfyysdfjhusd hudsh jbdhbf  sdjs jdbfs jhduifhsuid udufhusdghf"
-        },
-    ]
 
-    tarjetas = [tarjeta_reporte(**report) for report in reportes_demo]
+
+    # Solo una vez
+    total_reportes_text = ft.Text(f"Total usuarios: 0", size=14, color=TEXT_COLOR)
+    mensaje_error = ft.Text("", color=ft.Colors.RED)
+
+    # Función para actualizar el total de reportes
+
+    def actualizar_total_reportes(total_real):
+        total_reportes_text.value = f"Total usuarios: {total_real}"
+        total_reportes_text.update()
 
 
 
-    VISIBLE_CARDS = 4
-    start_index = 0
-    tarjetas_container = ft.Row(
-        spacing=20,
-        expand=True,
-        wrap=False,
-        scroll=None,
-    )
+    def cargar_reportes_iniciales(page):
+        global tarjetas_todas, tarjetas_actuales, start_index
+        tarjetas_todas = obtener_reportes(page, None, None, None)  # sin filtros
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
 
-    def actualizar_tarjetas():
-        tarjetas_container.controls = [tarjetas[(start_index + i) % len(tarjetas)] for i in range(VISIBLE_CARDS)]
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(page, start_index, tarjetas_actuales)
         page.update()
 
-    def siguiente(e):
-        nonlocal start_index
-        start_index = (start_index + VISIBLE_CARDS) % len(tarjetas)
-        actualizar_tarjetas()
+    def aplicar_filtros(e):
+        global tarjetas_filtradas, tarjetas_actuales, start_index
+        reporte_id = id_reporte_field.value.strip() if id_reporte_field.value else None
+        reportador_id = id_usuario_field.value.strip() if id_usuario_field.value else None
+        rol = rol_dropdown.value.strip() if rol_dropdown.value else None
 
-    def anterior(e):
-        nonlocal start_index
-        start_index = (start_index - VISIBLE_CARDS + len(tarjetas)) % len(tarjetas)
-        actualizar_tarjetas()
 
-    actualizar_tarjetas()
+        if not reporte_id:
+            reporte_id = None
 
-    publicaciones_list_container = ft.Container(
+        if not reportador_id:
+            reportador_id = None
+
+        if rol  == "Todas":
+            rol = None
+
+        print(f"ID REPORTE: {reporte_id},  ID REPORTADOR: {reportador_id}, ROL: {rol}")
+
+        tarjetas_filtradas = obtener_reportes(e.page, reporte_id, reportador_id, rol)
+        tarjetas_actuales = tarjetas_filtradas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+    def eliminar_filtros(e):
+        global tarjetas_todas, tarjetas_actuales, start_index
+
+        tarjetas_todas = obtener_reportes(page, None, None, None)  # sin filtros
+
+        tarjetas_actuales = tarjetas_todas
+        start_index = 0
+
+        # Limpiar el contenedor de tarjetas
+        tarjetas_container.controls.clear()
+
+        # Renderizar usando la función de mostrar tarjetas
+        actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+        e.page.update()
+
+    filtros.content.controls.extend([
+        ft.ElevatedButton(
+            text="Aplicar filtros",
+            icon=ft.Icons.FILTER_ALT,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=aplicar_filtros
+        ),
+        ft.ElevatedButton(
+            text="Eliminar filtros",
+            icon=ft.Icons.CLEAR,
+            bgcolor=ft.Colors.BLUE,
+            color=ft.Colors.WHITE,
+            on_click=eliminar_filtros
+        ),
+
+    ])
+
+    reportes_list_container = ft.Container(
         content=ft.Column(
             [
                 ft.Container(
@@ -500,29 +648,20 @@ def main(page: ft.Page):
         padding=ft.padding.only(left=0, right=0, top=12, bottom=0)
     )
 
-    total_reportes_text = ft.Text(
-        f"Total de reportes: {VISIBLE_CARDS}/{len(reportes_demo)}",
-        size=14,
-        color=TEXT_COLOR,
-    )
 
-    filtros_y_total = ft.Column([
-        filtros,
-        ft.Container(
-            content=total_reportes_text,
-            padding=ft.padding.only(top=20),
-            alignment=ft.alignment.center_left,
-        )
-    ], horizontal_alignment=ft.CrossAxisAlignment.START)
+
+
 
     main_content = ft.Row(
-        [
+        controls=[
             ft.Container(
-                content=filtros_y_total,
+                content=ft.Column(
+                    [filtros,total_reportes_text]
+                ),
                 padding=ft.padding.only(top=85),
             ),
             ft.Container(
-                content=publicaciones_list_container,
+                content=reportes_list_container,
                 expand=True,
                 padding=ft.padding.only(left=20, top=0),
             ),
@@ -534,6 +673,8 @@ def main(page: ft.Page):
 
     page.add(header, tabs, main_content, confirm_dialog)
 
+    # Cargar reportes iniciales **después** de agregar el control a la página
+    cargar_reportes_iniciales(page)
 
 
 if __name__ == "__main__":

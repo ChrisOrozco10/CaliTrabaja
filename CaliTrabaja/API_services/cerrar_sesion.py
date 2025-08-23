@@ -1,10 +1,10 @@
 import requests
 
-BASE_URL = "http://127.0.0.1:5000/api"
+BASE_URL = "https://juan200521.pythonanywhere.com"
 
 def cerrar_sesion_api():
     try:
-        res = requests.post(f"{BASE_URL}/cerrar_sesion_admin")
+        res = requests.post(f"{BASE_URL}/api/cerrar_sesion_admin")
         data = res.json()
         return data
     except Exception as e:

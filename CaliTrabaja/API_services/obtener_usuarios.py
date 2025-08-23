@@ -1,9 +1,9 @@
 import requests
 
-BASE_URL = "http://127.0.0.1:5000/api"
+BASE_URL = "https://juan200521.pythonanywhere.com"
 
 def gestionar_usuarios_admin(token, filtros = None):
-    url = f"{BASE_URL}/gestion_usuarios_admin"
+    url = f"{BASE_URL}/api/gestion_usuarios_admin"
     headers = {
         "Authorization": f"Bearer {token}"
     }

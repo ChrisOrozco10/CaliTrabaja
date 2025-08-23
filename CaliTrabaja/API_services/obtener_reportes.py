@@ -1,12 +1,12 @@
 import requests
 
+
 BASE_URL = "https://juan200521.pythonanywhere.com"
 
-
-def gestionar_publicaciones_admin(token, filtros=None):
-    url = f"{BASE_URL}/api/gestion_publicaciones_admin"
+def gestionar_reportes_admin(token, filtros=None):
+    url = f"{BASE_URL}/api/gestion_reportes_admin"
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
     }
     try:
         response = requests.post(url, headers=headers, json=filtros if filtros else {})
@@ -14,13 +14,14 @@ def gestionar_publicaciones_admin(token, filtros=None):
         if response.status_code != 200 or not response.text:
             print("Error al conectar con la API o respuesta vacía")
             return []
-        resultado = response.json()  # Convierte la respuesta JSON a dict
+
+        resultado = response.json()
 
         if not resultado.get("success", False):
-            print("Error al obtener publicaciones:", resultado.get("message"))
+            print("Error al obtener usuarios:", resultado.get("message"))
             return []
 
-        return resultado.get("lista_publicaciones", [])
+        return resultado.get("reportes", [])
 
     except requests.exceptions.RequestException as e:
         print("Error de conexión con la API:", e)
@@ -28,3 +29,4 @@ def gestionar_publicaciones_admin(token, filtros=None):
     except ValueError as e:  # Captura JSONDecodeError
         print("Error al decodificar JSON:", e)
         return []
+

@@ -15,8 +15,6 @@ def main(page: ft.Page):
     global tarjetas_container, tarjetas
 
 
-
-
     correo = "jupahure@gmail.com"
     contrasena = "A1234567"
 
