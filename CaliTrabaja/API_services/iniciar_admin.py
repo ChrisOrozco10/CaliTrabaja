@@ -2,24 +2,24 @@ import requests
 
 
 def iniciar_sesion_api(correo, contrasena):
-    url = "https://juan200521.pythonanywhere.com/api/iniciar_sesion_admin"
+    url = "http://127.0.0.1:5000/api/iniciar_sesion_admin"
 
     data = {"correo": correo, "contrasena": contrasena}
-    response = requests.post(url, json=data)
 
-    # Validar respuesta
-    if response.status_code != 200:
-        print("Error en la petición:", response.status_code, response.text)
-        return None
-
-    if not response.text:
-        print("La API respondió vacío")
-        return None
 
     try:
-        resultado_json = response.json()  # <-- aquí se convierte a dict
+        response = requests.post(url, json=data)
+
+        try:
+            resultado_json = response.json()  # <-- aquí se convierte a dict
+        except Exception:
+            resultado_json = {
+                "success": False,
+                "message": f"Respuesta no válida del servidor: {response.text}"
+            }
         return resultado_json
+
     except Exception as e:
-        print("Error al decodificar JSON:", e)
-        return None
+        # Ahora devolvemos un dict incluso si hay fallo de conexión
+        return {"success": False, "message": f"Error de conexión: {e}"}
 

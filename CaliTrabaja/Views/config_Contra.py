@@ -4,6 +4,7 @@ import login
 import crearADMIN
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
+from CaliTrabaja.API_services.cambiar_contraseña import cambiar_contraseña_admin
 
 def main(page: ft.Page):
     # ---------------------- CONFIGURACIÓN DE LA PÁGINA ----------------------
@@ -19,6 +20,11 @@ def main(page: ft.Page):
     page.spacing = 0
     page.window_width = 1920
     page.window_height = 1080
+
+    #------------- OBTENER TOKEN--------------------
+
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
 
     # ---------------------- FUNCIONES AUXILIARES ----------------------
     def close_drawer(e):
@@ -135,6 +141,54 @@ def main(page: ft.Page):
         ),
     )
 
+    def cambiar_contraseña(page, actual_contrasena, nueva_contrasena, confirmar_contrasena):
+        token = obtener_token(page)
+
+        if not token:
+            page.add(ft.Text("Debes iniciar sesion primero"))
+            return []
+
+        datos = {}
+        if actual_contrasena:
+            datos["actual_contrasena"] = actual_contrasena
+
+        if nueva_contrasena:
+            datos["nueva_contrasena"] = nueva_contrasena
+
+        if confirmar_contrasena:
+            datos["confirmar_contrasena"] = confirmar_contrasena
+
+        print("Datos enviados: ", datos)
+
+        respuesta= cambiar_contraseña_admin(token, datos)
+
+        return respuesta
+
+
+
+
+
+    def guardar_contraseña(e):
+        contraseña_actual = contraseña_actual_field.value.strip() if contraseña_actual_field.value else None
+        nueva_contraseña = nueva_contraseña_field.value.strip() if nueva_contraseña_field.value else None
+        repetir_contraseña = repetir_contraseña_field.value.strip() if repetir_contraseña_field else None
+
+
+
+        print(f"CONTRASEÑA ACTUAL: {contraseña_actual}, NUEVA CONTRASEÑA: {nueva_contraseña}, REPETIR CONTRASEÑA: {repetir_contraseña}")
+
+        respuesta= cambiar_contraseña(page, contraseña_actual, nueva_contraseña, repetir_contraseña)
+
+
+        if respuesta.get("message"):
+            print(respuesta["message"])
+
+    #Inicializar los parametros
+    contraseña_actual_field = ft.TextField(password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)
+    nueva_contraseña_field = ft.TextField(  password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)
+    repetir_contraseña_field = ft.TextField( password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)
+
+
     # Contenido formulario
     contenido = ft.Row(
 
@@ -150,22 +204,13 @@ def main(page: ft.Page):
                         ft.Text("Cambiar contraseña", size=22, weight="bold", color="#3EAEB1", font_family="Oswald"),
 
                         ft.Text("Contraseña actual", size=18, color="black", font_family="Oswald"),
-                        ft.TextField(
-                            password=True, can_reveal_password=True,
-                            border_radius=8, bgcolor="#E0E0E0", width=600
-                        ),
+                        contraseña_actual_field,
 
                         ft.Text("Nueva contraseña", size=18, color="black", font_family="Oswald"),
-                        ft.TextField(
-                            password=True, can_reveal_password=True,
-                            border_radius=8, bgcolor="#E0E0E0", width=600
-                        ),
+                        nueva_contraseña_field,
 
                         ft.Text("Repetir contraseña", size=18, color="black", font_family="Oswald"),
-                        ft.TextField(
-                            password=True, can_reveal_password=True,
-                            border_radius=8, bgcolor="#E0E0E0", width=600
-                        ),
+                        repetir_contraseña_field,
 
                         ft.Row(
                             alignment="start",  # Botones alineados al inicio
@@ -192,7 +237,8 @@ def main(page: ft.Page):
                                         side=ft.BorderSide(width=2, color="#2FBDB3"),
                                         padding=ft.padding.symmetric(horizontal=20, vertical=10),
                                         text_style=ft.TextStyle(font_family="Oswald", size=18),
-                                    )
+                                    ),
+                                    on_click=guardar_contraseña
                                 ),
                             ]
                         ),
@@ -201,6 +247,9 @@ def main(page: ft.Page):
             )
         ]
     )
+
+
+
 
     # Layout principal
     page.add(

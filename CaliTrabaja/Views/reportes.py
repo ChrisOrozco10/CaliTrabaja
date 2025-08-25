@@ -15,15 +15,8 @@ from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 def main(page: ft.Page):
     global tarjetas_container, tarjetas
 
-    correo = "jupahure@gmail.com"
-    contrasena = "A1234567"
-
-    resultado = iniciar_sesion_api(correo, contrasena)
-    if not resultado or not resultado.get("success"):
-        page.add(ft.Text("No se pudo iniciar sesión"))
-    else:
-        token = resultado.get("token")
-        setattr(page, "session_token", token)
+    def obtener_token(page):
+        return  getattr(page, "session_token", None)
 
 
     page.clean()
@@ -340,7 +333,7 @@ def main(page: ft.Page):
     tarjetas_todas = []
     tarjetas_filtradas = []
     tarjetas_actuales = []  # <- Lista activa
-    VISIBLE_CARDS = 4
+    VISIBLE_CARDS = 2
     start_index = 0
     tarjetas_container = ft.Row(
         spacing=20,
@@ -392,11 +385,12 @@ def main(page: ft.Page):
     def obtener_reportes(page, reporte_id=None, reportador_id=None, rol=None ):
         # Obtener el token de la sesión
 
+        token = obtener_token(page)
 
-        token = getattr(page, "session_token", None)
+
         if not token:
             page.add(ft.Text("Debe iniciar sesión primero"))
-            return
+            return[]
 
         filtros = {}
         if reporte_id:
@@ -412,22 +406,22 @@ def main(page: ft.Page):
 
 
         # Traer los reportes desde la API
-        reportes = gestionar_reportes_admin(token, filtros)
-        print("Reportes recibidos de la API:", reportes)
+        respuesta = gestionar_reportes_admin(token, filtros)
+        print("Reportes recibidos de la API:", respuesta)
 
         # Crear las tarjetas con la información obtenida
         tarjetas = []
-        for reporte in reportes:
-            # Si reportes es un diccionario, usamos .get(), si no, asumimos que es un string
-            if isinstance(reporte, dict):
-                tarjetas.append(
-                    tarjeta_reporte(
-                        de=f"{reporte.get('reportador_nombre', 'N/A')}",
-                        para=f"{reporte.get('reportado_nombre', 'N/A')}",
-                        id_reporte=reporte.get('reporte_id', 'N/A'),
-                        full_description=reporte.get('descripcion_reporte', 'N/A')
+        if respuesta.get("success") and "reportes" in respuesta:
+            for reporte in respuesta["reportes"]:
+                if isinstance(reporte, dict):
+                    tarjetas.append(
+                        tarjeta_reporte(
+                            de=f"{reporte.get('reportador_nombre', 'N/A')}",
+                            para=f"{reporte.get('reportado_nombre', 'N/A')}",
+                            id_reporte=reporte.get('reporte_id', 'N/A'),
+                            full_description=reporte.get('descripcion_reporte', 'N/A')
+                        )
                     )
-                )
         return tarjetas
 
 

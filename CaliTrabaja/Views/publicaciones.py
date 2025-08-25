@@ -15,15 +15,8 @@ def main(page: ft.Page):
     global tarjetas_container, tarjetas
 
 
-    correo = "jupahure@gmail.com"
-    contrasena = "A1234567"
-
-    resultado = iniciar_sesion_api(correo, contrasena)
-    if not resultado or not resultado.get("success"):
-        page.add(ft.Text("No se pudo iniciar sesión"))
-    else:
-        token = resultado.get("token")
-        setattr(page, "session_token", token)
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
 
 
 
@@ -441,7 +434,7 @@ def main(page: ft.Page):
 
 
     #------------------------------------------------
-    VISIBLE_CARDS = 5
+    VISIBLE_CARDS = 2
     CARD_WIDTH = 280
     CARD_HEIGHT = 390
     CARD_SPACING = 10
@@ -497,7 +490,7 @@ def main(page: ft.Page):
 
 
     def obtener_publicacion(page, id_pub=None, categoria=None):
-        token = getattr(page, "session_token", None)
+        token =  obtener_token(page)
         if not token:
             page.add(ft.Text("Debe iniciar sesión primero"))
             return []
@@ -513,8 +506,8 @@ def main(page: ft.Page):
         print(" Filtros enviados a la API:", filtros)
 
         # Llamar a la API para obtener las publicaciones
-        publicaciones = gestionar_publicaciones_admin(token, filtros)
-        print("Publicaciones recibidas de la API:", publicaciones)
+        respuesta = gestionar_publicaciones_admin(token, filtros)
+        print("Publicaciones recibidas de la API:", respuesta)
 
 
 
@@ -522,18 +515,19 @@ def main(page: ft.Page):
 
         # Crear las tarjetas con la información obtenida
         tarjetas = []
-        for publicacion in publicaciones:
-            if isinstance(publicacion, dict):
-                tarjetas.append(
-                    tarjeta_publicacion(
-                        nombre=f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}",
-                        id_publicacion=publicacion.get("publicacion_id", "N/A"),
-                        descripcion=publicacion.get("descripcion_publicacion", "N/A"),
-                        costo=publicacion.get("precio", "N/A"),
-                        categoria=publicacion.get("nombre_subcategoria", "N/A"),
-                        calificacion_estrellas=publicacion.get("calificacion_estrellas", 3)
+        if respuesta.get("success") and "lista_publicaciones" in respuesta:
+            for publicacion in respuesta["lista_publicaciones"]:
+                if isinstance(publicacion, dict):
+                    tarjetas.append(
+                        tarjeta_publicacion(
+                            nombre=f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}",
+                            id_publicacion=publicacion.get("publicacion_id", "N/A"),
+                            descripcion=publicacion.get("descripcion_publicacion", "N/A"),
+                            costo=publicacion.get("precio", "N/A"),
+                            categoria=publicacion.get("nombre_subcategoria", "N/A"),
+                            calificacion_estrellas=publicacion.get("calificacion_estrellas", 3)
+                        )
                     )
-                )
         return tarjetas
 
 

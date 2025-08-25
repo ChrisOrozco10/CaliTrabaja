@@ -143,6 +143,7 @@ def main(page: ft.Page):
         else:
             error_text.visible = False
             page.update()
+            page.session_token = resultado.get("token")
             page.clean()
             inicio.main(page)
 

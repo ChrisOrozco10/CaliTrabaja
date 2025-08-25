@@ -12,15 +12,8 @@ from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 def main(page: ft.Page):
     global  tarjetas_container, tarjetas
 
-    correo="jupahure@gmail.com"
-    contrasena="A1234567"
-
-    resultado = iniciar_sesion_api(correo, contrasena)
-    if not resultado or not resultado.get("success"):
-        page.add(ft.Text("No se pudo iniciar sesión"))
-    else:
-        token = resultado.get("token")
-        setattr(page, "session_token", token)
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
 
 
     # -------------------- Tema y colores ----------------------------------
@@ -379,7 +372,7 @@ def main(page: ft.Page):
 
     CARD_WIDTH =380
     CARD_SPACING = 20
-    VISIBLE_CARDS = 4
+    VISIBLE_CARDS = 2
     CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
     # Distancia exacta entre flechas (una tarjeta + su separación)
@@ -438,8 +431,10 @@ def main(page: ft.Page):
     def obtener_usuario(page, id_usu=None, nombre=None,apellido=None, correo=None, rol=None, estado=None, categoria= None, publicaciones=None ):
         # Obtener el token de la sesión
 
+        token = obtener_token(page)
 
-        token = getattr(page, "session_token", None)
+
+
         if not token:
             page.add(ft.Text("Debe iniciar sesión primero"))
             return
@@ -469,27 +464,28 @@ def main(page: ft.Page):
 
 
         # Traer los usuarios desde la API
-        usuarios = gestionar_usuarios_admin(token, filtros)
-        print("Usuarios recibidos de la API:", usuarios)
+        respuesta = gestionar_usuarios_admin(token, filtros)
+        print("Usuarios recibidos de la API:", respuesta)
 
         # Crear las tarjetas con la información obtenida
         tarjetas = []
-        for usuario in usuarios:
-            # Si usuario es un diccionario, usamos .get(), si no, asumimos que es un string
-            if isinstance(usuario, dict):
-                tarjetas.append(
-                    tarjeta_usuario(
-                        id_user=f"{usuario.get('usuario_id', 'N/A')}",
-                        nombre=f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}",
-                        rol=usuario.get('tipo_rol', 'N/A'),
-                        estado=usuario.get('estado', 'N/A'),
-                        fecha=usuario.get('fecha_registro', 'N/A'),
-                        correo=usuario.get('correo', 'N/A'),
-                        publicaciones=usuario.get('publicaciones', 0),
-                        reportes=usuario.get('reportes', 0),
-                        categoria = ", ".join(usuario.get('categorias', [])) if usuario.get('categorias') else "N/A"
+        if respuesta.get("success") and "usuarios" in respuesta:
+            for usuario in respuesta["usuarios"]:
+                # Si usuario es un diccionario, usamos .get(), si no, asumimos que es un string
+                if isinstance(usuario, dict):
+                    tarjetas.append(
+                        tarjeta_usuario(
+                            id_user=f"{usuario.get('usuario_id', 'N/A')}",
+                            nombre=f"{usuario.get('primer_nombre', '')} {usuario.get('primer_apellido', '')}",
+                            rol=usuario.get('tipo_rol', 'N/A'),
+                            estado=usuario.get('estado', 'N/A'),
+                            fecha=usuario.get('fecha_registro', 'N/A'),
+                            correo=usuario.get('correo', 'N/A'),
+                            publicaciones=usuario.get('publicaciones', 0),
+                            reportes=usuario.get('reportes', 0),
+                            categoria = ", ".join(usuario.get('categorias', [])) if usuario.get('categorias') else "N/A"
+                        )
                     )
-                )
         return tarjetas
 
     #------------------------------------------------------------
