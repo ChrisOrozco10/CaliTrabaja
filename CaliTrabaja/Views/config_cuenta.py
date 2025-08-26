@@ -5,9 +5,12 @@ import crearADMIN
 import config_Des
 import config_Contra
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
-
+from CaliTrabaja.API_services.datos_admin import obtener_datos_admin
 
 def main(page: ft.Page):
+
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
     # ---------------------- CONFIGURACIÓN DE LA PÁGINA ----------------------
     page.clean()
     page.fonts = {
@@ -136,22 +139,50 @@ def main(page: ft.Page):
     )
 
     # ---------------------- CONTENIDO PRINCIPAL ----------------------
-    fecha_union = "12 de Septiembre del 2024"  # <- Valor de ejemplo
-    rol_usuario = "Cliente"  # <- Valor de ejemplo
 
-    tarjeta_info = ft.Container(
-        padding=15,
-        width=700,
-        bgcolor=CARD_BACKGROUND,
-        border=ft.border.all(1, "#CCCCCC"),
-        border_radius=10,
-        content=ft.Column(
-            controls=[
-                ft.Text(f"Nombre de usuario: se unió el {fecha_union}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
-                ft.Text(f"Rol actual: {rol_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
-            ]
+
+    def obtener_datos():
+        token = obtener_token(page)
+
+        if not token:
+            page.add(ft.Text("Debes iniciar sesion primero"))
+            return None
+
+        respuesta = obtener_datos_admin(token)
+
+        if respuesta.get("success") == True:
+            datos = respuesta.get("datos")
+
+            nombre_usuario = f"{datos['primer_nombre']} {datos['primer_apellido']}"
+            fecha_union = datos["fecha_registro"]  # 👈 viene de la BD
+            rol_usuario = datos["rol"]  # 👈 viene de la BD
+
+
+
+
+
+            tarjeta_info = ft.Container(
+            padding=15,
+            width=700,
+            bgcolor=CARD_BACKGROUND,
+            border=ft.border.all(1, "#CCCCCC"),
+            border_radius=10,
+            content=ft.Column(
+                controls=[
+                    ft.Text(f"Nombre de usuario:{nombre_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
+                    ft.Text(f"Se unio el: {fecha_union}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
+                    ft.Text(f"Rol actual: {rol_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
+                ]
+            )
         )
-    )
+        return tarjeta_info
+
+
+
+
+
+
+
 
     tarjeta_cambiar_contra = ft.Container(
         padding=15,
@@ -202,6 +233,7 @@ def main(page: ft.Page):
             ]
         )
     )
+    tarjeta_info = obtener_datos()
 
     contenido = ft.Container(
         margin=ft.margin.only(top=100),

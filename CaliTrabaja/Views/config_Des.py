@@ -4,8 +4,11 @@ import login
 import crearADMIN
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
+from CaliTrabaja.API_services.deshabilitar_admin import deshabilitar_admin
 
 def main(page: ft.Page):
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
     # ---------------------- CONFIGURACIÓN DE LA PÁGINA ----------------------
     page.clean()
     page.fonts = {
@@ -51,6 +54,9 @@ def main(page: ft.Page):
             page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
         page.snack_bar.open = True
         page.update()
+
+
+
 
     # ---------------------- DRAWER ----------------------
     page.drawer = ft.NavigationDrawer(
@@ -127,6 +133,42 @@ def main(page: ft.Page):
             ],
         ),
     )
+    def deshabilitar_usuario(page, confirmar_contraseña):
+        token = obtener_token(page)
+
+        if not token:
+            page.add(ft.Text("Debes iniciar sesion primero"))
+            return []
+
+        datos = {}
+
+        if confirmar_contraseña:
+            datos["contrasena"]=confirmar_contraseña
+
+        print("Contraseña enviada:", datos)
+
+        respuesta=deshabilitar_admin(token, datos)
+        if respuesta.get("success")==True:
+            cerrar_sesion(page)
+
+        return  respuesta
+
+
+
+    def capturar_contraseña(e):
+        confirmar_contraseña = confirmar_contraseña_field.value.strip() if confirmar_contraseña_field.value else None
+
+        print("CONTRASEÑA ACTUAL:", confirmar_contraseña)
+
+        respuesta = deshabilitar_usuario(page, confirmar_contraseña)
+
+        if respuesta.get("message"):
+            print(respuesta["message"])
+
+    # INICIALIZAR VARIABLE
+
+    confirmar_contraseña_field = ft.TextField( password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)
+
 
     # ---------------------- CONTENIDO ----------------------
     contenido = ft.Row(
@@ -149,10 +191,7 @@ def main(page: ft.Page):
                             font_family="Oswald"
                         ),
                         ft.Text("Confirmar contraseña", size=18, color="black", font_family="Oswald"),
-                        ft.TextField(
-                            password=True, can_reveal_password=True,
-                            border_radius=8, bgcolor="#E0E0E0", width=600
-                        ),
+                        confirmar_contraseña_field,
                         ft.Row(
                             alignment="start",
                             spacing=20,
@@ -166,7 +205,8 @@ def main(page: ft.Page):
                                         side=ft.BorderSide(width=2, color=PRIMARY_COLOR),
                                         padding=ft.padding.symmetric(horizontal=30, vertical=12),
                                         text_style=ft.TextStyle(font_family="Oswald", size=18),
-                                    )
+                                    ),
+                                    on_click=capturar_contraseña
                                 ),
                                 ft.ElevatedButton(
                                     "Cancelar",

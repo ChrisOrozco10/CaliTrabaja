@@ -162,6 +162,10 @@ def main(page: ft.Page):
 
         respuesta= cambiar_contraseña_admin(token, datos)
 
+        if respuesta.get("success")==True:
+            print(respuesta["success"])
+            inicio.main(page)
+
         return respuesta
 
 
@@ -179,9 +183,12 @@ def main(page: ft.Page):
 
         respuesta= cambiar_contraseña(page, contraseña_actual, nueva_contraseña, repetir_contraseña)
 
-
         if respuesta.get("message"):
             print(respuesta["message"])
+
+
+
+
 
     #Inicializar los parametros
     contraseña_actual_field = ft.TextField(password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)
