@@ -5,9 +5,11 @@ import publicaciones
 import login
 import inicio
 import config_cuenta
+import perfil_experto
+import perfil_usuario
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 from CaliTrabaja.API_services.obtener_usuarios import gestionar_usuarios_admin
-from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
+
 
 def main(page: ft.Page):
     global  tarjetas_container, tarjetas
@@ -280,10 +282,29 @@ def main(page: ft.Page):
         ],
     )
 
+    def redirigir_por_rol(r, id,  page):
+
+        #Redirige al perfil correcto según el rol del usuario.
+
+        print(r)
+
+        def accion(e):
+            if r == "experto":
+                page.usuario_id = id
+                page.clean()
+                perfil_experto.main(page)
+
+            elif r == "cliente":
+                page.usuario_id = id
+                page.clean()
+                perfil_usuario.main(page)
+
+            else:
+                print(f"Rol  no reconocido.")
 
 
 
-
+        return accion
 
     def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating=3):
 
@@ -303,9 +324,11 @@ def main(page: ft.Page):
                                     controls=[
                                         ft.Icon(name=ft.Icons.PERSON, color="#333333", size=20),
                                         ft.Text("Ver perfil", color="#333333"),
+
                                     ],
                                     spacing=10,
                                 ),
+                                on_click= lambda e, r= rol, id=id_user :redirigir_por_rol(r,id, page)(e)
                             ),
                             ft.PopupMenuItem(
                                 content=ft.Row(

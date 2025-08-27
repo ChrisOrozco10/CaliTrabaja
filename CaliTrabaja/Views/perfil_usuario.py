@@ -4,6 +4,7 @@ import crearADMIN
 import inicio
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
+from CaliTrabaja.API_services.datos_clientes import obtener_datos_clientes
 import login
 
 def main(page: ft.Page):
@@ -47,6 +48,15 @@ def main(page: ft.Page):
     ]
 
     # -------------------- Drawer ------------------------------------------
+
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
+
+    def obtener_id(page):
+        return getattr(page, "usuario_id", None)
+
+
+
     def close_drawer(e):
         page.drawer.open = False
         page.update()
@@ -121,6 +131,41 @@ def main(page: ft.Page):
             )
         ],
     )
+
+    def procesar_datos_clientes(page):
+        token = obtener_token(page)
+        usuario_id = obtener_id(page)
+
+        if not token:
+            print("Debes iniciar sesion para entrar")
+
+        informacion ={}
+
+        if usuario_id:
+            informacion["usuario_id"] = usuario_id
+
+        respuesta = obtener_datos_clientes(token, informacion)
+
+        print("Datos", respuesta)
+
+        datos=respuesta.get("clientes", {})
+
+        primer_nombre = datos.get("primer_nombre") or "N/A"
+        primer_apellido = datos.get("primer_apellido") or "N/A"
+        direccion = datos.get("direccion") or  "N/A"
+
+        return {
+            "nombre_usuario": f"{primer_nombre}  {primer_apellido}",
+            "direccion": direccion
+        }
+
+    datos = procesar_datos_clientes(page)
+    if datos:
+        nombre= datos.get("nombre_usuario")
+        direccion = datos.get("direccion")
+
+    print(f"NOMBRE: {nombre}, DIRECCION: {direccion}")
+
     # -------------------- Encabezado --------------------------------------
     header = ft.Container(
         bgcolor="#F8F8F8",
@@ -223,7 +268,7 @@ def main(page: ft.Page):
             [
                 ft.Column(
                     [
-                        ft.Text("Lesly Solanyi", size=22, weight="bold", color=text_black),
+                        ft.Text(nombre, size=22, weight="bold", color=text_black),
                         ft.CircleAvatar(content=ft.Icon(name="person", size=60), radius=40, bgcolor="#26B2B8"),
                         ft.Row(
                             [ft.Icon(name="star", color=star_color, size=20) for _ in range(5)],
@@ -238,10 +283,8 @@ def main(page: ft.Page):
                 ft.Column(
                     [
                         ft.Text("Ubicación", size=18, weight="bold", color=text_black),
-                        ft.Text("Barrio", size=16, weight="normal", color=text_black),
-                        ft.Text("Salomia", size=14, color=text_gray),
-                        ft.Text("¿Perteneces a una empresa?", size=18, weight="bold", color=text_black),
-                        ft.Text("Green SAS", size=14, color=text_gray),
+                        ft.Text("Direccion", size=16, weight="normal", color=text_black),
+                        ft.Text(direccion, size=14, color=text_gray),
                     ],
                     spacing=5,
                     alignment="start",
@@ -338,5 +381,3 @@ def main(page: ft.Page):
     )
 
 
-# Ejecutar app
-ft.app(target=main)

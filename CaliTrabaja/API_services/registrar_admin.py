@@ -3,7 +3,7 @@ import requests
 
 
 def registrar_sesion_api(correo):
-    url = "http://127.0.0.1:5000api/registrar_sesion_admin"
+    url = "http://127.0.0.1:5000/api/registrar_sesion_admin"
     data = {"correo": correo}
 
     try:

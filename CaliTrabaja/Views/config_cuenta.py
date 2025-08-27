@@ -150,18 +150,23 @@ def main(page: ft.Page):
 
         respuesta = obtener_datos_admin(token)
 
-        if respuesta.get("success") == True:
-            datos = respuesta.get("datos")
-
-            nombre_usuario = f"{datos['primer_nombre']} {datos['primer_apellido']}"
-            fecha_union = datos["fecha_registro"]  # 👈 viene de la BD
-            rol_usuario = datos["rol"]  # 👈 viene de la BD
+        print("RESPUESTA:", respuesta)
 
 
+        datos = respuesta.get("admin")
+
+        primer_nombre = datos.get("primer_nombre") or "N/A"
+        primer_apellido = datos.get("primer_apellido") or "N/A"
+        fecha_union = datos.get("fecha_registro") or "N/A"  # 👈 viene de la BD
+        rol_usuario = datos.get("rol") or "N/A"  # 👈 viene de la BD
 
 
 
-            tarjeta_info = ft.Container(
+
+
+
+
+        tarjeta_info = ft.Container(
             padding=15,
             width=700,
             bgcolor=CARD_BACKGROUND,
@@ -169,7 +174,7 @@ def main(page: ft.Page):
             border_radius=10,
             content=ft.Column(
                 controls=[
-                    ft.Text(f"Nombre de usuario:{nombre_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
+                    ft.Text(f"Nombre de usuario:{primer_nombre} {primer_apellido}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
                     ft.Text(f"Se unio el: {fecha_union}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
                     ft.Text(f"Rol actual: {rol_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
                 ]

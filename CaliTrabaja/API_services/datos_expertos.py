@@ -2,10 +2,10 @@ import requests
 
 BASE_URL = "http://127.0.0.1:5000"
 
-def cambiar_contraseña_admin(token, datos=None):
-    url = f"{BASE_URL}/api/cambiar_contraseña_admin"
+def obtener_datos_expertos(token, datos=None):
+    url = f"{BASE_URL}/api/datos_expertos"
     headers = {
-        "Authorization": f"Bearer {token}",
+        "Authorization": f"Bearer {token}"
     }
     try:
         response = requests.post(url, headers=headers, json=datos if datos else {})
@@ -22,4 +22,3 @@ def cambiar_contraseña_admin(token, datos=None):
     except Exception as e:
         # Ahora devolvemos un dict incluso si hay fallo de conexión
         return {"success": False, "message": f"Error de conexión: {e}"}
-

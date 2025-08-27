@@ -8,7 +8,7 @@ def iniciar_sesion_api(correo, contrasena):
 
 
     try:
-        response = requests.post(url, json=data)
+        response = requests.post(url, json=data if data else {})
 
         try:
             resultado_json = response.json()  # <-- aquí se convierte a dict

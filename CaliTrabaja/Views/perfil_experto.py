@@ -4,6 +4,7 @@ import inicio
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 import login
+from CaliTrabaja.API_services.datos_expertos import  obtener_datos_expertos
 
 def main(page: ft.Page):
     # Configuración general
@@ -23,6 +24,12 @@ def main(page: ft.Page):
     def close_drawer(e):
         page.drawer.open = False
         page.update()
+
+    def obtener_token(page):
+        return getattr(page, "session_token", None)
+
+    def obtener_id(page):
+        return getattr(page, "usuario_id", None)
 
     def on_drawer_item_click(e):
         title = e.control.title.value if isinstance(e.control.title, ft.Text) else ""
@@ -130,6 +137,80 @@ def main(page: ft.Page):
         ),
     )
 
+    def procesar_datos_expertos(page):
+
+        token = obtener_token(page)
+        id_usuario = obtener_id(page)
+        if not token:
+            print("Necesita tener el token.")
+
+
+        informacion = {}
+
+        if id_usuario:
+            informacion["usuario_id"] = id_usuario
+
+        respuesta = obtener_datos_expertos(token, informacion)
+
+        print(f"ID:{informacion}, Token:{token} ")
+
+        print("Datos de experto", respuesta)
+
+        datos = respuesta.get("expertos", {})
+
+        # Extraer valores con defaults
+        primer_nombre = datos.get("primer_nombre", "N/A")
+        primer_apellido = datos.get("primer_apellido", "N/A")
+        descripcion = datos.get("descripcion") or "N/A"
+        nombre_experiencia = datos.get("nombre_experiencia") or "N/A"
+        descripcion_experiencia = datos.get("descripcion_experiencia") or "N/A"
+        fecha_inicio_experiencia = datos.get("fecha_inicio_experiencia") or "N/A"
+        fecha_fin_experiencia = datos.get("fecha_fin_experiencia") or "N/A"
+        titulo_obtenido = datos.get("titulo_obtenido") or "N/A"
+        institucion = datos.get("institucion") or "N/A"
+        fecha_inicio_estudios = datos.get("fecha_inicio_estudios") or "N/A"
+        fecha_fin_estudios = datos.get("fecha_fin_estudios") or "N/A"
+        tipo_aptitud = datos.get("tipo_aptitud")
+
+        # Asegurar que idiomas_items sea una lista
+        idiomas_items = [i.get("nombre_idioma") for i in (datos.get("idiomas") or [])]
+
+        # Asegurar que aptitudes_items sea lista
+        aptitudes_items = [tipo_aptitud] if tipo_aptitud else []
+
+        return {
+            "nombre_usuario": f"{primer_nombre} {primer_apellido}",
+            "descripcion": descripcion,
+            "nombre_experiencia": nombre_experiencia,
+            "descripcion_experiencia": descripcion_experiencia,
+            "fecha_inicio_experiencia": fecha_inicio_experiencia,
+            "fecha_fin_experiencia": fecha_fin_experiencia,
+            "titulo_obtenido": titulo_obtenido,
+            "institucion": institucion,
+            "fecha_inicio_estudios": fecha_inicio_estudios,
+            "fecha_fin_estudios": fecha_fin_estudios,
+            "tipo_aptitud": tipo_aptitud,
+            "idiomas_items": idiomas_items,
+            "aptitudes_items": aptitudes_items
+        }
+
+
+    datos_expertos = procesar_datos_expertos(page)
+
+    if datos_expertos:
+        nombre_usuario = datos_expertos.get("nombre_usuario")
+        descripcion = datos_expertos.get("descripcion")
+        nombre_experiencia = datos_expertos.get("nombre_experiencia")
+        descripcion_experiencia = datos_expertos.get("descripcion_experiencia")
+        fecha_inicio_experiencia = datos_expertos.get("fecha_inicio_experiencia")
+        fecha_fin_experiencia = datos_expertos.get("fecha_fin_experiencia")
+        titulo_obtenido = datos_expertos.get("titulo_obtenido")
+        institucion = datos_expertos.get("institucion")
+        fecha_inicio_estudios = datos_expertos.get("fecha_inicio_estudios")
+        fecha_fin_estudios = datos_expertos.get("fecha_fin_estudios")
+        idiomas_items = datos_expertos.get("idiomas_items")
+        aptitudes_items = datos_expertos.get("aptitudes_items")
+
     # TÍTULO
     title = ft.Container(
         content=ft.Text("Perfil Experto", size=26, weight="bold", color=PRIMARY_COLOR),
@@ -139,19 +220,19 @@ def main(page: ft.Page):
 
     # PERFIL IZQUIERDA
     profile_image = ft.Container(
-        content=ft.Icon(name="person", size=60, color=PRIMARY_COLOR),
-        border=ft.border.all(1, COLOR_BORDE),
-        border_radius=100,
-        padding=20
-    )
+    content=ft.Icon(name="person", size=60, color=PRIMARY_COLOR),
+    border=ft.border.all(1, COLOR_BORDE),
+            border_radius=100,
+            padding=20
+        )
     stars = ft.Row(
-        [ft.Icon(name="star", color=PRIMARY_COLOR, size=20) for _ in range(5)],
-        alignment="center"
-    )
+            [ft.Icon(name="star", color=PRIMARY_COLOR, size=20) for _ in range(5)],
+            alignment="center"
+        )
 
     left_column = ft.Column(
         [
-            ft.Text("Angie Calderon", size=18, weight="bold", color=TEXT_COLOR),
+            ft.Text(nombre_usuario, size=18, weight="bold", color=TEXT_COLOR),
             profile_image,
             stars
         ],
@@ -161,24 +242,22 @@ def main(page: ft.Page):
 
     # DESCRIPCIÓN Y EXPERIENCIA
     description = ft.Text(
-        "Apasionada por el fitness, te ayudo a alcanzar tus metas de salud y fuerza "
-        "con planes de entrenamiento personalizados. Mi enfoque combina disciplina "
-        "y motivación para que logres tu mejor versión.",
+        descripcion,
         size=13, color=TEXT_COLOR
     )
 
     experience = ft.Column([
         ft.Text("Experiencia", size=14,color=TEXT_COLOR, weight="bold"),
-        ft.Text("Coaching", color=TEXT_COLOR),
-        ft.Text("Smart Fit", color=TEXT_COLOR),
-        ft.Text("enero 2023 - septiembre 2024", size=12, color=TEXT_COLOR),
+        ft.Text(nombre_experiencia, color=TEXT_COLOR),
+        ft.Text(descripcion_experiencia, color=TEXT_COLOR),
+        ft.Text(f"{fecha_inicio_experiencia}- {fecha_fin_experiencia}", size=12, color=TEXT_COLOR),
     ], spacing=3)
 
     studies = ft.Column([
         ft.Text("Mis estudios", size=14, weight="bold", color=TEXT_COLOR),
-        ft.Text("Técnico en actividad física", color=TEXT_COLOR),
-        ft.Text("Servicio nacional de aprendizaje", color=TEXT_COLOR ),
-        ft.Text("julio 2022 - diciembre 2022", size=12, color=TEXT_COLOR)
+        ft.Text(titulo_obtenido, color=TEXT_COLOR),
+        ft.Text(institucion, color=TEXT_COLOR ),
+        ft.Text(f"{fecha_inicio_estudios} - {fecha_fin_estudios}", size=12, color=TEXT_COLOR)
     ], spacing=3)
 
     center_column = ft.Column(
@@ -191,7 +270,7 @@ def main(page: ft.Page):
             ])
         ],
         spacing=12
-    )
+        )
 
     # CUADRO DE IDIOMAS Y APTITUDES
     def cuadro_titulo(titulo, items):
@@ -206,8 +285,8 @@ def main(page: ft.Page):
             padding=15
         )
 
-    idiomas = cuadro_titulo("Idiomas", ["Español", "Inglés"])
-    aptitudes = cuadro_titulo("Aptitudes", ["Liderazgo", "Comunicación efectiva"])
+    idiomas = cuadro_titulo("Idiomas", idiomas_items)
+    aptitudes = cuadro_titulo("Aptitudes",aptitudes_items)
 
     right_column = ft.Column([idiomas, aptitudes], spacing=15)
 
@@ -231,4 +310,3 @@ def main(page: ft.Page):
     )
 
 
-ft.app(target=main)
