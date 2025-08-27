@@ -9,6 +9,7 @@ import perfil_experto
 import perfil_usuario
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 from CaliTrabaja.API_services.obtener_usuarios import gestionar_usuarios_admin
+from CaliTrabaja.API_services.deshabilitar_cuenta_global import deshabilitar_cuenta_global
 
 
 def main(page: ft.Page):
@@ -16,6 +17,7 @@ def main(page: ft.Page):
 
     def obtener_token(page):
         return getattr(page, "session_token", None)
+
 
 
     # -------------------- Tema y colores ----------------------------------
@@ -282,6 +284,31 @@ def main(page: ft.Page):
         ],
     )
 
+    def deshabilitar_cuenta(id, page):
+
+        token = obtener_token(page)
+        if token is None:
+            print("Token no valido, inicia sesion")
+
+        datos = {}
+
+        if id:
+            datos["usuario_id"]= id
+
+
+        respuesta =   deshabilitar_cuenta_global(token, datos)
+
+        print(respuesta)
+
+        if respuesta.get("success") == True:
+            print("Usuario deshabilitado correctamente")
+
+        else :
+            print("Error al deshabilitar usuario")
+
+        cargar_usuarios_iniciales(page)
+        page.update()
+
     def redirigir_por_rol(r, id,  page):
 
         #Redirige al perfil correcto según el rol del usuario.
@@ -348,7 +375,7 @@ def main(page: ft.Page):
                                     ],
                                     spacing=10,
                                 ),
-                                on_click=lambda e: abrir_confirmacion(nombre, "deshabilitar la cuenta", id_user)
+                                on_click=lambda e,  id=id_user: deshabilitar_cuenta( id, page)
                             ),
                         ],
                     )

@@ -6,6 +6,8 @@ import datetime
 import usuarios
 import login
 import inicio
+import perfil_usuario
+import perfil_experto
 from CaliTrabaja.API_services.obtener_reportes import gestionar_reportes_admin
 from CaliTrabaja.Views import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
@@ -419,14 +421,42 @@ def main(page: ft.Page):
                             de=f"{reporte.get('reportador_nombre', 'N/A')}",
                             para=f"{reporte.get('reportado_nombre', 'N/A')}",
                             id_reporte=reporte.get('reporte_id', 'N/A'),
-                            full_description=reporte.get('descripcion_reporte', 'N/A')
+                            full_description=reporte.get('descripcion_reporte', 'N/A'),
+                            rol_reportador = reporte.get("rol_reportador", "N/A"),
+                            usuario_id = reporte.get("usuario_id_reportador", "N/A")
                         )
                     )
         return tarjetas
 
+    def redirigir_por_rol(r, id,  page):
+
+        #Redirige al perfil correcto según el rol del usuario.
+
+        print(r)
+
+        def accion(e):
+            if r == "experto":
+                page.usuario_id = id
+                page.clean()
+                perfil_experto.main(page)
+
+            elif r == "cliente":
+                page.usuario_id = id
+                page.clean()
+                perfil_usuario.main(page)
+
+            else:
+                print(f"Rol  no reconocido.")
 
 
-    def tarjeta_reporte(de, para, id_reporte, full_description):
+
+        return accion
+
+
+
+
+
+    def tarjeta_reporte(de, para, id_reporte, full_description, rol_reportador, usuario_id):
         display_description = full_description.split(' ... ')[0] if ' ... ' in full_description else full_description
         has_more = ' ... ' in full_description
 
@@ -443,6 +473,7 @@ def main(page: ft.Page):
                         ],
                         spacing=10,
                     ),
+                    on_click=lambda e, r=rol_reportador, id=usuario_id: redirigir_por_rol(r, id, page)(e)
                 ),
                 ft.PopupMenuItem(
                     content=ft.Row(

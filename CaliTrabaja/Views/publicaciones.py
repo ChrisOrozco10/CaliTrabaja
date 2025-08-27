@@ -7,9 +7,12 @@ import usuarios
 import login
 import inicio
 import config_cuenta
+import perfil_experto
+import perfil_usuario
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 from CaliTrabaja.API_services.iniciar_admin import iniciar_sesion_api
 from CaliTrabaja.API_services.obtener_publicaciones import gestionar_publicaciones_admin
+from CaliTrabaja.API_services.eliminar_publicacion import desactivar_publicaciones
 
 def main(page: ft.Page):
     global tarjetas_container, tarjetas
@@ -265,12 +268,61 @@ def main(page: ft.Page):
 
     )
 
+    def eliminar_publicaciones(id, page):
+        token = obtener_token(page)
+
+        if token is None:
+            print("Token no valido, inicia sesion")
+
+        datos = {}
+        if id:
+            datos["publicacion_id"] = id
+
+        respuesta = desactivar_publicaciones(token, datos)
+        print(respuesta)
+
+        if respuesta.get("success") == True:
+            print("Publicacion eliminada correctamente")
+
+        else:
+            print("Publicacion no eliminada")
+
+
+        cargar_publicaciones_iniciales(page)
+        page.update()
+
+
+    def redirigir_por_rol(r, id,  page):
+
+        #Redirige al perfil correcto según el rol del usuario.
+
+        print(r)
+
+        def accion(e):
+            if r == "experto":
+                page.usuario_id = id
+                page.clean()
+                perfil_experto.main(page)
+
+            elif r == "cliente":
+                page.usuario_id = id
+                page.clean()
+                perfil_usuario.main(page)
+
+            else:
+                print(f"Rol  no reconocido.")
+
+
+
+        return accion
 
 
 
 
 
-    def tarjeta_publicacion(id_publicacion, nombre, descripcion, costo, categoria, calificacion_estrellas=3):
+
+
+    def tarjeta_publicacion(id_publicacion,usuario_id, rol, nombre, descripcion, costo, categoria, estado_publicacion,  calificacion_estrellas=3):
         def get_stars(rating):
             return ft.Row(
                 [
@@ -296,6 +348,7 @@ def main(page: ft.Page):
                         ],
                         spacing=10,
                     ),
+                    on_click=lambda e, r=rol, id=id_publicacion: redirigir_por_rol(r, id, page)(e)
                 ),
                 ft.PopupMenuItem(
                     content=ft.Row(
@@ -315,7 +368,7 @@ def main(page: ft.Page):
                         ],
                         spacing=10,
                     ),
-                    on_click=lambda e: abrir_confirmacion(nombre, "Eliminar la publicacion", id_publicacion)
+                    on_click=lambda e, id=id_publicacion: eliminar_publicaciones( id, page)
                 ),
             ],
         )
@@ -367,6 +420,7 @@ def main(page: ft.Page):
                         controls=[
                             ft.Text(f"COP {costo}/hr", size=14, weight=ft.FontWeight.BOLD, color="#777777"),
                             ft.Text(f"Categoría: {categoria}", size=12, color="#333333"),
+                            ft.Text(f"Estado: {estado_publicacion}", size=12, color="#333333"),
                         ]
                     ),
 
@@ -522,10 +576,13 @@ def main(page: ft.Page):
                         tarjeta_publicacion(
                             nombre=f"{publicacion.get('primer_nombre', '')} {publicacion.get('primer_apellido', '')}",
                             id_publicacion=publicacion.get("publicacion_id", "N/A"),
+                            rol = publicacion.get("rol", "N/A"),
+                            usuario_id = publicacion.get("usuario_id", "N/A"),
                             descripcion=publicacion.get("descripcion_publicacion", "N/A"),
                             costo=publicacion.get("precio", "N/A"),
                             categoria=publicacion.get("nombre_subcategoria", "N/A"),
-                            calificacion_estrellas=publicacion.get("calificacion_estrellas", 3)
+                            calificacion_estrellas=publicacion.get("calificacion_estrellas", 3),
+                            estado_publicacion = publicacion.get("estado_publicacion", "N/A")
                         )
                     )
         return tarjetas
