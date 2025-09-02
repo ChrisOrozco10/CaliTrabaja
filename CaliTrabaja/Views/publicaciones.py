@@ -80,21 +80,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
@@ -273,6 +278,7 @@ def main(page: ft.Page):
 
         if token is None:
             print("Token no valido, inicia sesion")
+            return
 
         datos = {}
         if id:
@@ -282,15 +288,27 @@ def main(page: ft.Page):
         print(respuesta)
 
         if respuesta.get("success") == True:
-            print("Publicacion eliminada correctamente")
-
+            # Mostrar mensaje de confirmación
+            sb = ft.SnackBar(
+                content=ft.Text("La publicación fue deshabilitada correctamente."),
+                bgcolor=ft.Colors.GREEN,
+                duration=3000
+            )
+            page.overlay.append(sb)
+            sb.open = True
+            page.update()
         else:
-            print("Publicacion no eliminada")
-
+            # Mostrar mensaje de error
+            sb = ft.SnackBar(
+                content=ft.Text("Error al deshabilitar la publicación o publicación ya está deshabilitada."),
+                bgcolor=ft.Colors.RED,
+                duration=3000
+            )
+            page.overlay.append(sb)
+            sb.open = True
+            page.update()
 
         cargar_publicaciones_iniciales(page)
-        page.update()
-
 
     def redirigir_por_rol(r, id,  page):
 
@@ -315,9 +333,6 @@ def main(page: ft.Page):
 
 
         return accion
-
-
-
 
 
 
@@ -353,18 +368,8 @@ def main(page: ft.Page):
                 ft.PopupMenuItem(
                     content=ft.Row(
                         controls=[
-                            ft.Icon(name=ft.Icons.REPORT_PROBLEM, color="#333333", size=20),
-                            ft.Text("Notificar Problema", color="#333333"),
-                        ],
-                        spacing=10,
-                    ),
-                    on_click=lambda e: abrir_confirmacion(nombre, "notificar un problema", id_publicacion)
-                ),
-                ft.PopupMenuItem(
-                    content=ft.Row(
-                        controls=[
                             ft.Icon(name=ft.Icons.BLOCK, color="#333333", size=20),
-                            ft.Text("Eliminar Publicacion", color="#333333"),
+                            ft.Text("Deshabilitar Publicacion", color="#333333"),
                         ],
                         spacing=10,
                     ),
@@ -380,7 +385,7 @@ def main(page: ft.Page):
                 [
                     ft.Row(
                         controls=[
-                            ft.Text(f"ID #{id_publicacion}", size=12, color="#333333"),
+                            ft.Text(f"ID #{id_publicacion}", size=18, color="#333333"),
                             menu_desplegable,
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN
@@ -397,7 +402,7 @@ def main(page: ft.Page):
                             ft.Column(
                                 spacing=2,
                                 controls=[
-                                    ft.Text(nombre, size=16, weight=ft.FontWeight.BOLD, color="#333333"),
+                                    ft.Text(nombre, size=22, weight=ft.FontWeight.BOLD, color="#333333"),
                                     get_stars(calificacion_estrellas),
                                 ]
                             ),
@@ -407,8 +412,8 @@ def main(page: ft.Page):
                     ft.Column(
                         spacing=5,
                         controls=[
-                            ft.Text("Descripción:", size=14, color="#333333", weight=ft.FontWeight.BOLD),
-                            ft.Text(descripcion, size=12, color="#777777", max_lines=3,
+                            ft.Text("Descripción:", size=18, color="#333333", weight=ft.FontWeight.BOLD),
+                            ft.Text(descripcion, size=18, color="#777777", max_lines=3,
                                     overflow=ft.TextOverflow.ELLIPSIS),
                         ]
                     ),
@@ -418,26 +423,10 @@ def main(page: ft.Page):
                     ft.Column(
                         spacing=2,
                         controls=[
-                            ft.Text(f"COP {costo}/hr", size=14, weight=ft.FontWeight.BOLD, color="#777777"),
-                            ft.Text(f"Categoría: {categoria}", size=12, color="#333333"),
-                            ft.Text(f"Estado: {estado_publicacion}", size=12, color="#333333"),
+                            ft.Text(f"COP {costo}/hr", size=18, weight=ft.FontWeight.BOLD, color="#777777"),
+                            ft.Text(f"Categoría: {categoria}", size=18, color="#333333"),
+                            ft.Text(f"Estado: {estado_publicacion}", size=18, color="#333333"),
                         ]
-                    ),
-
-                    ft.Container(
-                        content=ft.ElevatedButton(
-                            "Contactar experto",
-                            bgcolor="#FFFFFF",
-                            color="#333333",
-                            style=ft.ButtonStyle(
-                                padding=ft.padding.symmetric(horizontal=15, vertical=10),
-                                shape=ft.RoundedRectangleBorder(radius=20),
-                                side=ft.BorderSide(1, "#2FBDB3"),
-                            ),
-                            width=220
-                        ),
-                        alignment=ft.alignment.center,
-                        padding=ft.padding.only(top=10)
                     ),
                 ],
                 spacing=8,
@@ -488,10 +477,10 @@ def main(page: ft.Page):
 
 
     #------------------------------------------------
-    VISIBLE_CARDS = 2
-    CARD_WIDTH = 280
-    CARD_HEIGHT = 390
-    CARD_SPACING = 10
+    VISIBLE_CARDS = 3
+    CARD_WIDTH = 380
+    CARD_SPACING = 20
+    ARROW_SPACING = CARD_WIDTH + CARD_SPACING  # 300 px
     CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
 
     def actualizar_tarjetas(page, start_index, tarjetas_lista):
@@ -504,7 +493,9 @@ def main(page: ft.Page):
                     content=ft.Text("No hay publicaciones disponibles.", color="red"),
                     alignment=ft.alignment.center,
                     width=CAROUSEL_WIDTH,  # mismo ancho del carrusel
-                    height=CARD_HEIGHT,  # misma altura de las tarjetas
+                    height=400,  # misma altura de las tarjetas
+                    padding=ft.padding.only(left=-300),
+
                 )
             )
             total_publicaciones = 0
@@ -520,28 +511,24 @@ def main(page: ft.Page):
         page.update()
 
         # Funciones de paginación
-    def siguiente(e):
-        global start_index,  tarjetas_actuales
 
+    def siguiente(e):
+        global start_index, tarjetas_actuales
         if tarjetas_actuales:
-            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  #  Avanzar normal
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):
                 start_index += VISIBLE_CARDS
             else:
-                start_index = 0
+                start_index = len(tarjetas_actuales) - (len(tarjetas_actuales) % VISIBLE_CARDS or VISIBLE_CARDS)
             actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
     def anterior(e):
         global start_index, tarjetas_actuales
-
         if tarjetas_actuales:
-            if start_index - VISIBLE_CARDS >= 0:  # Retrocede normal
+            if start_index - VISIBLE_CARDS >= 0:
                 start_index -= VISIBLE_CARDS
             else:
-                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # Va al final si retrocede demasiado
-
-            #  siempre actualizar
+                start_index = 0
             actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
-
 
     def obtener_publicacion(page, id_pub=None, categoria=None):
         token =  obtener_token(page)
@@ -616,7 +603,7 @@ def main(page: ft.Page):
 
         ],
         label="Categorías",
-        width=120,
+        width=250,
     )
 
 
@@ -627,19 +614,45 @@ def main(page: ft.Page):
         content=ft.Column(
             [
                 ft.Text("Filtrar por:", weight=ft.FontWeight.BOLD, size=14, color=TEXT_COLOR),
-                ft.Row([  # Filtro de ID publicación
-                    ft.Text("ID publicación", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    id_publicacion_field,
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                ft.Row([  # Filtro de Categoría
-                    ft.Text("Categorías", expand=True, color=TEXT_COLOR, size=14, weight=ft.FontWeight.BOLD),
-                    categoria_dropdown,
-                ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                # ID publicación
+                ft.Row(
+                    [
+                        ft.Text(
+                            "ID publicación",
+                            color=TEXT_COLOR,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                        ),
+                        ft.Container(
+                            content=id_publicacion_field,  # tu TextField
+                            expand=1,  # 👈 se expande hasta el final
+                        )
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
 
+                # Categorías
+                ft.Row(
+                    [
+                        ft.Text(
+                            "Todas",
+                            color=TEXT_COLOR,
+                            size=14,
+                            weight=ft.FontWeight.BOLD,
+                            width=75
+                        ),
+                        ft.Container(
+                            content=categoria_dropdown,  # tu Dropdown
+                            expand=1,
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+
+                )
             ],
             spacing=8,
         ),
-        padding=12,
+        padding=10,
         bgcolor=CARD_BACKGROUND,
         height=250,
         width=260,
@@ -657,29 +670,39 @@ def main(page: ft.Page):
             controls=[tarjetas_container, mensaje_error],
         ),
         expand=True,
-        padding=ft.padding.only(left=20, top=0),
+        padding=ft.padding.only(left=18, top=0),
     )
 
-    # Contenedor de paginación
-    paginacion_controls = ft.Row(
-        controls=[
-            ft.IconButton(
-                icon=ft.Icons.ARROW_BACK_IOS_NEW,
-                on_click=anterior,
-                icon_size=40,
-                icon_color=PRIMARY_COLOR,
-                tooltip="Anterior",
-            ),
-            ft.IconButton(
-                icon=ft.Icons.ARROW_FORWARD_IOS,
-                on_click=siguiente,
-                icon_size=40,
-                icon_color=PRIMARY_COLOR,
-                tooltip="Siguiente",
-            ),
-        ],
+    # Flechas en color PRIMARY_COLOR y con icon_size 40 px
+    btn_prev = ft.IconButton(
+        icon=ft.Icons.ARROW_BACK_IOS_NEW,
+        on_click=anterior,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
+    )
+    btn_next = ft.IconButton(
+        icon=ft.Icons.ARROW_FORWARD_IOS,
+        on_click=siguiente,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
+    )
+
+    # Navegación centrada y con spacing exacto
+    navegacion = ft.Container(
+        width=CAROUSEL_WIDTH,
+        content=ft.Row(
+            controls=[btn_prev, btn_next],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=ARROW_SPACING,
+        ),
+        padding=ft.padding.only(left=-315),
+    )
+
+    # Carrusel con tarjetas
+    carrusel = ft.Column(
+        controls=[tarjetas_container, navegacion],
+        spacing=25,
         alignment=ft.MainAxisAlignment.CENTER,
-        spacing=20,
     )
 
     # Contenedor para el título
@@ -690,8 +713,8 @@ def main(page: ft.Page):
             weight=ft.FontWeight.BOLD,
             color=PRIMARY_COLOR,
         ),
-        alignment=ft.alignment.center,  # Asegura que el título esté centrado
-        padding=ft.padding.only(left=-300),  # Ajustar el padding
+        alignment=ft.alignment.center,
+        padding=ft.padding.only(left=-320),  # ajusta igual que en usuarios
     )
 
 
@@ -699,10 +722,10 @@ def main(page: ft.Page):
     # Estructura final de la columna de publicaciones
     publicaciones_list_container = ft.Container(
         content=ft.Column(
-            controls=[titulo_container, publicaciones_list_containers, paginacion_controls],
+            controls=[titulo_container, carrusel],
         ),
         expand=True,
-        padding=ft.padding.only(left=20, top=0),
+        padding=ft.padding.only(left=30, top=0),
     )
 
     # -----------------------------
@@ -794,31 +817,26 @@ def main(page: ft.Page):
     ])
 
     # Contenedor principal
-    main_content = ft.Container(
-        padding=ft.padding.only(top=20),  # altura general
-        content=ft.Row(
-            controls=[
-                # FILTROS DE PUBLICACIONES
-                ft.Container(
-                    margin=ft.margin.only(top=40),  #  baja solo el menú de filtrar
-                    content=ft.Column(
-                        [filtros, total_publicaciones_text],
-                        alignment=ft.MainAxisAlignment.START,
-                        spacing=10
-                    ),
-                    expand=False,
-                    alignment=ft.alignment.top_center,
+    main_content = ft.Row(
+        controls=[
+            ft.Container(
+                content=ft.Column(
+                    [filtros, total_publicaciones_text],  # filtros + total
+                    alignment=ft.MainAxisAlignment.START,
+                    spacing=10,
                 ),
-                # TARJETAS DE PUBLICACIONES (el carrusel)
-                publicaciones_list_container,
-            ],
-            expand=True,
-            vertical_alignment=ft.CrossAxisAlignment.START,
-            spacing=20,
-        )
+                margin=ft.margin.only(top=39),
+                expand=False,
+                alignment=ft.alignment.top_center,
+            ),
+            publicaciones_list_container,  # título + carrusel
+        ],
+        expand=True,
+        vertical_alignment=ft.CrossAxisAlignment.START,
+        spacing=20,
     )
 
-    page.add(header, tabs, main_content,confirm_dialog)
+    page.add(header, tabs, main_content, confirm_dialog)
 
     # Cargar publicaciones iniciales **después** de agregar el control a la página
     cargar_publicaciones_iniciales(page)

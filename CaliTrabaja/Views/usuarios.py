@@ -59,21 +59,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
@@ -161,13 +166,6 @@ def main(page: ft.Page):
         confirm_dialog.open = False
         page.update()
 
-    def abrir_confirmacion(nombre, accion, id_usuario):
-        dialog_title.value = f"¿Seguro que deseas {accion}?"
-        dialog_description.value = f"Acción sobre ID #{id_usuario} ({nombre})"
-        dialog_textfield.value = ""
-        confirm_dialog.open = True
-        page.dialog = confirm_dialog
-        page.update()
 
     # -------------------- Encabezado --------------------------------------
     header = ft.Container(
@@ -309,10 +307,8 @@ def main(page: ft.Page):
         cargar_usuarios_iniciales(page)
         page.update()
 
-    def redirigir_por_rol(r, id,  page):
-
-        #Redirige al perfil correcto según el rol del usuario.
-
+    def redirigir_por_rol(r, id, page):
+        # Redirige al perfil correcto según el rol del usuario.
         print(r)
 
         def accion(e):
@@ -326,12 +322,42 @@ def main(page: ft.Page):
                 page.clean()
                 perfil_usuario.main(page)
 
+            elif r == "admin":
+                # Mostrar mensaje visual (SnackBar)
+                sb = ft.SnackBar(
+                    content=ft.Text("La opción 'Ver perfil' solo está disponible para clientes y expertos."),
+                    bgcolor=ft.Colors.RED,
+                    duration=3000  # 3 segundos
+                )
+                page.overlay.append(sb)
+                sb.open = True
+                page.update()
+
             else:
-                print(f"Rol  no reconocido.")
-
-
+                sb = ft.SnackBar(
+                    content=ft.Text(f"Rol '{r}' no reconocido."),
+                    bgcolor=ft.Colors.ORANGE,
+                    duration=3000
+                )
+                page.overlay.append(sb)
+                sb.open = True
+                page.update()
 
         return accion
+
+    def deshabilitar_cuenta(usuario_id, page):
+        # Aquí iría la lógica real para deshabilitar la cuenta en tu backend o base de datos
+        print(f"Cuenta {usuario_id} deshabilitada")
+
+        # Mostrar SnackBar de confirmación
+        sb = ft.SnackBar(
+            content=ft.Text("La cuenta fue deshabilitada correctamente."),
+            bgcolor=ft.Colors.GREEN,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
 
     def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating=3):
 
@@ -356,16 +382,6 @@ def main(page: ft.Page):
                                     spacing=10,
                                 ),
                                 on_click= lambda e, r= rol, id=id_user :redirigir_por_rol(r,id, page)(e)
-                            ),
-                            ft.PopupMenuItem(
-                                content=ft.Row(
-                                    controls=[
-                                        ft.Icon(name=ft.Icons.REPORT_PROBLEM, color="#333333", size=20),
-                                        ft.Text("Notificar Problema", color="#333333"),
-                                    ],
-                                    spacing=10,
-                                ),
-                                on_click=lambda e: abrir_confirmacion(nombre, "notificar un problema", id_user)
                             ),
                             ft.PopupMenuItem(
                                 content=ft.Row(
@@ -502,10 +518,6 @@ def main(page: ft.Page):
             filtros["tipo_rol"] = rol
         if estado and estado != "Todos":
             filtros["estado"] = estado
-
-        if publicaciones and publicaciones != "Todos":
-            filtros["destacada"] = publicaciones
-
         if categoria and categoria != "Todas":
             filtros["tipo_categoria"] = categoria
 
@@ -600,15 +612,6 @@ def main(page: ft.Page):
                         ],
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                     ),
-
-                    # --- Publicaciones ---
-                    ft.Row(
-                        controls=[
-                            ft.Text("Publicaciones", size=14, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, expand=True),
-                            publicaciones_dropdown,
-                        ],
-                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    ),
                     # --- Categorías ---
                     ft.Row(
                         controls=[
@@ -658,7 +661,7 @@ def main(page: ft.Page):
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=ARROW_SPACING,
         ),
-        padding=ft.padding.only(left=5),
+        padding=ft.padding.only(left=1),
     )
 
     carrusel = ft.Column(
@@ -675,7 +678,7 @@ def main(page: ft.Page):
             color=PRIMARY_COLOR,
         ),
         alignment=ft.alignment.center,  # Asegura que el título esté centrado
-        padding=ft.padding.only(left=-300),  # Ajustar el padding
+        padding=ft.padding.only(left=-370),  # Ajustar el padding
     )
 
     # Estructura final de la columna de publicaciones
@@ -684,10 +687,8 @@ def main(page: ft.Page):
             controls=[titulo_container, carrusel],
         ),
         expand=True,
-        padding=ft.padding.only(left=20, top=0),
+        padding=ft.padding.only(left=85, top=0),
     )
-
-
 
     # Función para actualizar el total de publicaciones
     def actualizar_total_usuarios(total_real):

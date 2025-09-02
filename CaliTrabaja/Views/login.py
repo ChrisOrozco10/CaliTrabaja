@@ -47,12 +47,12 @@ def main(page: ft.Page):
         hint_style=ft.TextStyle(
             font_family="Oswald",
             weight=ft.FontWeight.BOLD,
-            size=13,
+            size=18,
             color=ft.Colors.BLACK54,
         ),
         text_style=ft.TextStyle(
             font_family="Oswald",
-            size=13,
+            size=18,
             color=ft.Colors.BLACK
         ),
         border_color="transparent",
@@ -68,12 +68,12 @@ def main(page: ft.Page):
         hint_style=ft.TextStyle(
             font_family="Oswald",
             weight=ft.FontWeight.BOLD,
-            size=13,
+            size=18,
             color=ft.Colors.BLACK54,
         ),
         text_style=ft.TextStyle(
             font_family="Oswald",
-            size=13,
+            size=18,
             color=ft.Colors.BLACK
         ),
         border_color="transparent",
@@ -110,24 +110,26 @@ def main(page: ft.Page):
     error_text = ft.Text(
         value="",
         color="red",
-        size=12,
+        size=18,
         visible=False
     )
+
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
 
     def cerrar_dialogo(e):
         page.dialog.open = False
         page.update()
 
-    def mostrar_alerta(mensaje):
-        dialog = ft.AlertDialog(
-            title=ft.Text("Error"),
-            content=ft.Text(mensaje),
-            actions=[ft.TextButton("Cerrar", on_click=cerrar_dialogo)],
-            modal=True,
-        )
-        page.dialog = dialog
-        dialog.open = True
-        page.update()
+
 
     def abrir_usuarios(e):
         correo = correo_field.value
@@ -137,16 +139,16 @@ def main(page: ft.Page):
 
         if not resultado.get("success"):
             mensaje_error = resultado.get("message", "Error desconocido.")
-            error_text.value = mensaje_error
-            error_text.visible = True
-            page.update()
+            mostrar_snackbar(mensaje_error, exito=False)
         else:
-            error_text.visible = False
-            page.update()
+            # Guardar token en la sesión
             page.session_token = resultado.get("token")
+
+            mostrar_snackbar("Inicio de sesión exitoso.", exito=True)
+
+            # Cargar vista principal
             page.clean()
             inicio.main(page)
-
 
     # Contenedor Login (Responsive)
     def crear_contenedor_login(width):
@@ -177,7 +179,7 @@ def main(page: ft.Page):
                             color="black",
                             bgcolor="#e0e0e0",
                             shape=ft.RoundedRectangleBorder(radius=6),
-                            text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, font_family="Oswald"),
+                            text_style=ft.TextStyle(weight=ft.FontWeight.BOLD, font_family="Oswald", size=18),
                         ),
                     ),
                     error_text

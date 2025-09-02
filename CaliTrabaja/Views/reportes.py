@@ -26,13 +26,13 @@ def main(page: ft.Page):
         "Oswald": "https://raw.githubusercontent.com/google/fonts/main/ofl/oswald/Oswald%5Bwght%5D.ttf"
     }
     page.theme = ft.Theme(font_family="Oswald")
-    DESCRIPTION_BG = "#EEEEEE"
     PRIMARY_COLOR = "#2FBDB3"
     BACKGROUND_COLOR = "#FAFAFA"
     CARD_BACKGROUND = "#FFFFFF"
     BORDER_COLOR = "#DDDDDD"
     TEXT_COLOR = "#333333"
-    DESCRIPTION_TEXT_COLOR = ft.Colors.BLACK54
+    ARROW_SPACING = 30
+
 
     page.title = "CaliTrabaja - Reportes"
     page.window_maximized = True
@@ -76,22 +76,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
-
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
         # ---------------------------------------------------------------
 
     page.drawer = ft.NavigationDrawer(
@@ -335,21 +339,37 @@ def main(page: ft.Page):
     tarjetas_todas = []
     tarjetas_filtradas = []
     tarjetas_actuales = []  # <- Lista activa
-    VISIBLE_CARDS = 2
     start_index = 0
+
+    VISIBLE_CARDS = 2
+    CARD_WIDTH = 380
+    CARD_HEIGHT = 300
+    CARD_SPACING = 20
+    ARROW_SPACING = CARD_WIDTH + CARD_SPACING  # 300 px
+    CAROUSEL_WIDTH = VISIBLE_CARDS * CARD_WIDTH + (VISIBLE_CARDS - 1) * CARD_SPACING
+
     tarjetas_container = ft.Row(
-        spacing=20,
+        spacing=10,
         expand=True,
         wrap=False,
         scroll=None,
     )
 
-
     def actualizar_tarjetas(page, start_index, tarjetas_lista):
         tarjetas_container.controls.clear()
 
         if not tarjetas_lista:
-            tarjetas_container.controls.append(ft.Text("No hay reportes disponibles.", key="error_msg"))
+            # Mantener altura y ancho fijo para que el carrusel no se suba
+            tarjetas_container.controls.append(
+                ft.Container(
+                    content=ft.Text("No hay reportes disponibles.", color="red"),
+                    alignment=ft.alignment.center,
+                    width=CAROUSEL_WIDTH,  # mismo ancho del carrusel
+                    height=400,   # misma altura de las tarjetas
+                    padding=ft.padding.only(left=-20),
+                )
+
+            )
             total_reportes = 0
         else:
             # Mostrar las visibles según el índice
@@ -360,27 +380,24 @@ def main(page: ft.Page):
         actualizar_total_reportes(total_reportes)
         page.update()
 
-
     def siguiente(e):
         global start_index, tarjetas_actuales
-
         if tarjetas_actuales:
-            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):  # 👈 Avanzar normal
+            if start_index + VISIBLE_CARDS < len(tarjetas_actuales):
                 start_index += VISIBLE_CARDS
+            else:
+                start_index = len(tarjetas_actuales) - (len(tarjetas_actuales) % VISIBLE_CARDS or VISIBLE_CARDS)
+            actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
+
+    def anterior(e):
+        global start_index, tarjetas_actuales
+        if tarjetas_actuales:
+            if start_index - VISIBLE_CARDS >= 0:
+                start_index -= VISIBLE_CARDS
             else:
                 start_index = 0
             actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
-
-    def anterior(e):
-        global start_index, tarjetas_actuales
-
-        if tarjetas_actuales:
-            if start_index - VISIBLE_CARDS >= 0:  # 👈 Retrocede normal
-                start_index -= VISIBLE_CARDS
-            else:
-                start_index = max(0, len(tarjetas_actuales) - VISIBLE_CARDS)  # 👈 Va al final si retrocede demasiado
-                actualizar_tarjetas(e.page, start_index, tarjetas_actuales)
 
 
 
@@ -404,7 +421,7 @@ def main(page: ft.Page):
 
 
         # Verificar los filtros antes de hacer la llamada a la API
-        print("📌 Filtros enviados a la API:", filtros)
+        print("Filtros enviados a la API:", filtros)
 
 
         # Traer los reportes desde la API
@@ -475,16 +492,6 @@ def main(page: ft.Page):
                     ),
                     on_click=lambda e, r=rol_reportador, id=usuario_id: redirigir_por_rol(r, id, page)(e)
                 ),
-                ft.PopupMenuItem(
-                    content=ft.Row(
-                        controls=[
-                            ft.Icon(name=ft.Icons.REPORT_PROBLEM, color="#333333", size=20),
-                            ft.Text("Notificar Problema", color="#333333"),
-                        ],
-                        spacing=10,
-                    ),
-                    on_click=lambda e: abrir_confirmacion(de, "notificar un problema", id_reporte)
-                ),
             ],
         )
 
@@ -498,15 +505,15 @@ def main(page: ft.Page):
                         ft.Column(
                             spacing=2,
                             controls=[
-                                ft.Text(f"De: {de}", color="#333333", weight=ft.FontWeight.BOLD),
-                                ft.Text(f"Para: {para}", color="#333333", weight=ft.FontWeight.BOLD),
+                                ft.Text(f"De: {de}", size=18,color="#333333", weight=ft.FontWeight.BOLD),
+                                ft.Text(f"Para: {para}", size=18,color="#333333", weight=ft.FontWeight.BOLD),
                             ],
                         ),
                         ft.Row(
                             spacing=10,
                             controls=[
-                                ft.Text("ID", color="#888888", size=12),
-                                ft.Text(f"#{id_reporte}", color="#2FBDB3", weight=ft.FontWeight.BOLD, size=12),
+                                ft.Text("ID", color="#888888", size=18),
+                                ft.Text(f"#{id_reporte}", color="#2FBDB3", weight=ft.FontWeight.BOLD, size=18),
                                 menu_desplegable
                             ]
                         )
@@ -523,30 +530,15 @@ def main(page: ft.Page):
                     content=ft.Column(
                         spacing=2,
                         controls=[
-                            ft.Text(display_description, color="#333333", size=14, max_lines=5,
+                            ft.Text(display_description, color="#333333", size=18, max_lines=5,
                                     overflow=ft.TextOverflow.ELLIPSIS),
-                            ft.Text("Ver más", color=ft.Colors.BLUE, size=12,
+                            ft.Text("Ver más", color=ft.Colors.BLUE, size=18,
                                     italic=True) if has_more else ft.Container(),
                         ],
                     ),
                 ),
 
                 ft.Container(expand=True),  # Espaciador
-
-                # Botón inferior
-                ft.Container(
-                    content=ft.ElevatedButton(
-                        text="Notificar Usuario",
-                        bgcolor="#FFFFFF",
-                        color="#333333",
-                        style=ft.ButtonStyle(
-                            padding=ft.padding.symmetric(horizontal=15, vertical=10),
-                            shape=ft.RoundedRectangleBorder(radius=15),
-                            side=ft.BorderSide(1, "#2FBDB3")
-                        )
-                    ),
-                    alignment=ft.alignment.center,
-                ),
             ],
                 spacing=10,
                 expand=True
@@ -632,64 +624,97 @@ def main(page: ft.Page):
         ft.ElevatedButton(
             text="Aplicar filtros",
             icon=ft.Icons.FILTER_ALT,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"), color="#333333",
+            ),
             on_click=aplicar_filtros
         ),
         ft.ElevatedButton(
             text="Eliminar filtros",
             icon=ft.Icons.CLEAR,
-            bgcolor=ft.Colors.BLUE,
-            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=15, vertical=10),
+                shape=ft.RoundedRectangleBorder(radius=20),
+                side=ft.BorderSide(1, "#2FBDB3"), color="#333333",
+            ),
             on_click=eliminar_filtros
         ),
 
     ])
 
-    reportes_list_container = ft.Container(
-        content=ft.Column(
-            [
-                ft.Container(
-                    content=ft.Text(
-                        "Todos los reportes",
-                        size=22,
-                        weight=ft.FontWeight.BOLD,
-                        color=PRIMARY_COLOR,
-                    ),
-                    padding=ft.padding.only(left=570),
-                ),
-                ft.Container(content=tarjetas_container, padding=30, margin=0),
-                ft.Row([
-                    ft.IconButton(icon=ft.Icons.ARROW_BACK_IOS_NEW, on_click=anterior, icon_size=40,
-                                  icon_color=PRIMARY_COLOR),
-                    ft.IconButton(icon=ft.Icons.ARROW_FORWARD_IOS, on_click=siguiente, icon_size=40,
-                                  icon_color=PRIMARY_COLOR),
-                ], alignment=ft.MainAxisAlignment.CENTER, spacing=520),
-            ],
-            spacing=10,
-            horizontal_alignment=ft.CrossAxisAlignment.START,
-        ),
-        expand=True,
-        padding=ft.padding.only(left=0, right=0, top=12, bottom=0)
+    # Flechas
+    btn_prev = ft.IconButton(
+        icon=ft.Icons.ARROW_BACK_IOS_NEW,
+        on_click=anterior,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
+    )
+    btn_next = ft.IconButton(
+        icon=ft.Icons.ARROW_FORWARD_IOS,
+        on_click=siguiente,
+        icon_size=40,
+        icon_color=PRIMARY_COLOR,
     )
 
+    # Navegación centrada con spacing dinámico
+    navegacion = ft.Container(
+        width=CAROUSEL_WIDTH,
+        content=ft.Row(
+            controls=[btn_prev, btn_next],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=ARROW_SPACING,
+        ),
+        padding=ft.padding.only(left=-35),
+    )
 
+    # Carrusel con tarjetas + navegación
+    carrusel = ft.Column(
+        controls=[tarjetas_container, navegacion],
+        spacing=25,
+        alignment=ft.MainAxisAlignment.CENTER,
+    )
 
+    # Contenedor del título
+    titulo_container = ft.Container(
+        content=ft.Text(
+            "Todos los reportes",
+            size=22,
+            weight=ft.FontWeight.BOLD,
+            color=PRIMARY_COLOR,
+        ),
+        alignment=ft.alignment.center,  # centrado
+        padding=ft.padding.only(left=-355),
+    )
 
+    # Contenedor principal con título + carrusel
+    reportes_list_container = ft.Container(
+        content=ft.Column(
+            controls=[
+                titulo_container,
+                carrusel,
+            ],
+            spacing=25,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # centrado
+        ),
+        expand=True,
+        padding=ft.padding.only(left=85, top=0),  # parecido al de usuarios
+    )
 
     main_content = ft.Row(
         controls=[
             ft.Container(
                 content=ft.Column(
-                    [filtros,total_reportes_text]
+                    [filtros, total_reportes_text],
+                    alignment=ft.MainAxisAlignment.START,
+                    spacing=10
                 ),
-                padding=ft.padding.only(top=85),
+                margin=ft.margin.only(top=39),
+                expand=False,
+                alignment=ft.alignment.top_center,
             ),
-            ft.Container(
-                content=reportes_list_container,
-                expand=True,
-                padding=ft.padding.only(left=20, top=0),
-            ),
+            reportes_list_container,
         ],
         expand=True,
         vertical_alignment=ft.CrossAxisAlignment.START,

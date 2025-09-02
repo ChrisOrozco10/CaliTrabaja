@@ -42,21 +42,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
         # ---------------------------------------------------------------
 

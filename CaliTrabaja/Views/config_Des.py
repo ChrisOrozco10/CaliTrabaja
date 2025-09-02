@@ -43,17 +43,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-        page.snack_bar.open = True
-        page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
 
 
@@ -133,37 +142,59 @@ def main(page: ft.Page):
             ],
         ),
     )
+
     def deshabilitar_usuario(page, confirmar_contraseña):
         token = obtener_token(page)
 
         if not token:
-            page.add(ft.Text("Debes iniciar sesion primero"))
-            return []
+            mostrar_snackbar("Debes iniciar sesión primero.", exito=False)
+            return {"success": False, "message": "Token no encontrado."}
 
         datos = {}
 
         if confirmar_contraseña:
-            datos["contrasena"]=confirmar_contraseña
+            datos["contrasena"] = confirmar_contraseña
 
         print("Contraseña enviada:", datos)
 
-        respuesta=deshabilitar_admin(token, datos)
-        if respuesta.get("success")==True:
-            cerrar_sesion(page)
+        respuesta = deshabilitar_admin(token, datos)
 
-        return  respuesta
+        if respuesta.get("success"):
+            mostrar_snackbar("Cuenta deshabilitada correctamente.", exito=True)
+            page.clean()
+            login.main(page)
+        else:
+            mostrar_snackbar(respuesta.get("message", "Error al deshabilitar la cuenta"), exito=False)
 
-
+        return respuesta
 
     def capturar_contraseña(e):
         confirmar_contraseña = confirmar_contraseña_field.value.strip() if confirmar_contraseña_field.value else None
+
+        if not confirmar_contraseña:
+            mostrar_snackbar("Por favor ingresa tu contraseña.", exito=False)
+            return
 
         print("CONTRASEÑA ACTUAL:", confirmar_contraseña)
 
         respuesta = deshabilitar_usuario(page, confirmar_contraseña)
 
-        if respuesta.get("message"):
-            print(respuesta["message"])
+        if not respuesta.get("success"):
+            print("Error:", respuesta.get("message"))
+
+    def capturar_contraseña(e):
+        confirmar_contraseña = confirmar_contraseña_field.value.strip() if confirmar_contraseña_field.value else None
+
+        if not confirmar_contraseña:
+            mostrar_snackbar("Por favor ingresa tu contraseña.", exito=False)
+            return
+
+        print("CONTRASEÑA ACTUAL:", confirmar_contraseña)
+
+        respuesta = deshabilitar_usuario(page, confirmar_contraseña)
+
+        if not respuesta.get("success"):
+            print("Error:", respuesta.get("message"))
 
     # INICIALIZAR VARIABLE
 
@@ -197,20 +228,8 @@ def main(page: ft.Page):
                             spacing=20,
                             controls=[
                                 ft.ElevatedButton(
-                                    "Deshabilitar cuenta",
-                                    bgcolor="white",
-                                    color="black",
-                                    style=ft.ButtonStyle(
-                                        shape=ft.RoundedRectangleBorder(radius=30),
-                                        side=ft.BorderSide(width=2, color=PRIMARY_COLOR),
-                                        padding=ft.padding.symmetric(horizontal=30, vertical=12),
-                                        text_style=ft.TextStyle(font_family="Oswald", size=18),
-                                    ),
-                                    on_click=capturar_contraseña
-                                ),
-                                ft.ElevatedButton(
                                     "Cancelar",
-                                    bgcolor="white",
+                                    bgcolor="#F5F5F5",
                                     color="black",
                                     style=ft.ButtonStyle(
                                         shape=ft.RoundedRectangleBorder(radius=30),
@@ -219,6 +238,18 @@ def main(page: ft.Page):
                                         text_style=ft.TextStyle(font_family="Oswald", size=18),
                                     ),
                                     on_click=lambda e: (page.clean(), config_cuenta.main(page))
+                                ),
+                                ft.ElevatedButton(
+                                    "Deshabilitar cuenta",
+                                    bgcolor="#F5F5F5",
+                                    color="black",
+                                    style=ft.ButtonStyle(
+                                        shape=ft.RoundedRectangleBorder(radius=30),
+                                        side=ft.BorderSide(width=2, color=PRIMARY_COLOR),
+                                        padding=ft.padding.symmetric(horizontal=30, vertical=12),
+                                        text_style=ft.TextStyle(font_family="Oswald", size=18),
+                                    ),
+                                    on_click=capturar_contraseña
                                 ),
                             ]
                         ),

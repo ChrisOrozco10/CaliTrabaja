@@ -1,6 +1,9 @@
 import flet as ft
 import crearADMIN
 import inicio
+import usuarios
+import publicaciones
+import reportes
 import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 import login
@@ -18,6 +21,7 @@ def main(page: ft.Page):
 
     PRIMARY_COLOR = "#2FBDB3"
     TEXT_COLOR = "#333333"
+    BORDER_COLOR = "#DDDDDD"
     COLOR_BORDE = "#cfcfcf"
 
     # -------------------- Drawer ------------------------------------------
@@ -46,21 +50,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
@@ -136,6 +145,47 @@ def main(page: ft.Page):
             ],
         ),
     )
+    # -------------------- Pestañas ----------------------------------------
+    tabs = ft.Container(
+        alignment=ft.alignment.center,
+        content=ft.Row(
+            controls=[
+                ft.TextButton(
+                    text="Usuarios",
+                    on_click=lambda e: usuarios.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Publicaciones",
+                    on_click=lambda e: publicaciones.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Reportes",
+                    on_click=lambda e: reportes.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=30,
+        ),
+        border=ft.border.all(1, BORDER_COLOR),
+        border_radius=25,
+        padding=5,
+        margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
+    )
 
     def procesar_datos_expertos(page):
 
@@ -159,17 +209,17 @@ def main(page: ft.Page):
         datos = respuesta.get("expertos", {})
 
         # Extraer valores con defaults
-        primer_nombre = datos.get("primer_nombre", "N/A")
-        primer_apellido = datos.get("primer_apellido", "N/A")
-        descripcion = datos.get("descripcion") or "N/A"
-        nombre_experiencia = datos.get("nombre_experiencia") or "N/A"
-        descripcion_experiencia = datos.get("descripcion_experiencia") or "N/A"
-        fecha_inicio_experiencia = datos.get("fecha_inicio_experiencia") or "N/A"
-        fecha_fin_experiencia = datos.get("fecha_fin_experiencia") or "N/A"
-        titulo_obtenido = datos.get("titulo_obtenido") or "N/A"
-        institucion = datos.get("institucion") or "N/A"
-        fecha_inicio_estudios = datos.get("fecha_inicio_estudios") or "N/A"
-        fecha_fin_estudios = datos.get("fecha_fin_estudios") or "N/A"
+        primer_nombre = datos.get("primer_nombre", "No cuenta con informacion sobre el nombre")
+        primer_apellido = datos.get("primer_apellido", "No cuenta con informacion sobre el apellido")
+        descripcion = datos.get("descripcion") or "No cuenta con informacion sobre el descripcion"
+        nombre_experiencia = datos.get("nombre_experiencia") or "No cuenta con informacion sobre el nombre"
+        descripcion_experiencia = datos.get("descripcion_experiencia") or "No cuenta con informacion sobre el descripcion"
+        fecha_inicio_experiencia = datos.get("fecha_inicio_experiencia") or "No cuenta con informacion sobre la fecha de inicio en experiencia"
+        fecha_fin_experiencia = datos.get("fecha_fin_experiencia") or "No cuenta con informacion sobre la fecha de fin en experiencia"
+        titulo_obtenido = datos.get("titulo_obtenido") or "No cuenta con informacion sobre el titulo"
+        institucion = datos.get("institucion") or "No cuenta con informacion sobre el institucion "
+        fecha_inicio_estudios = datos.get("fecha_inicio_estudios") or "No cuenta con informacion sobre el fecha de inicio en estudios"
+        fecha_fin_estudios = datos.get("fecha_fin_estudios") or "No cuenta con informacion sobre el fecha de fin en estudios"
         tipo_aptitud = datos.get("tipo_aptitud")
 
         # Asegurar que idiomas_items sea una lista
@@ -304,7 +354,7 @@ def main(page: ft.Page):
 
     # PÁGINA
     page.add(
-        header,
+        header,tabs,
         title,
         ft.Container(content=main_card, padding=ft.padding.all(10))
     )

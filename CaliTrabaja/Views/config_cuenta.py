@@ -44,21 +44,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
         # ---------------------------------------------------------------
 
@@ -157,14 +162,8 @@ def main(page: ft.Page):
 
         primer_nombre = datos.get("primer_nombre") or "N/A"
         primer_apellido = datos.get("primer_apellido") or "N/A"
-        fecha_union = datos.get("fecha_registro") or "N/A"  # 👈 viene de la BD
-        rol_usuario = datos.get("rol") or "N/A"  # 👈 viene de la BD
-
-
-
-
-
-
+        fecha_union = datos.get("fecha_registro") or "N/A"
+        rol_usuario = datos.get("rol") or "N/A"
 
         tarjeta_info = ft.Container(
             padding=15,
@@ -225,7 +224,7 @@ def main(page: ft.Page):
             controls=[
                 ft.Text("Esta opción hace que tu cuenta se elimine de manera definitiva.", size=20, color=TEXT_COLOR, font_family="Oswald"),
                 ft.ElevatedButton(
-                    "Eliminar cuenta",
+                    "Deshabilitar cuenta",
                     bgcolor="#F5F5F5",
                     color="black",
                     style=ft.ButtonStyle(

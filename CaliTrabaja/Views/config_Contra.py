@@ -47,21 +47,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
         # ---------------------------------------------------------------
 
@@ -168,27 +173,22 @@ def main(page: ft.Page):
 
         return respuesta
 
-
-
-
-
     def guardar_contraseña(e):
         contraseña_actual = contraseña_actual_field.value.strip() if contraseña_actual_field.value else None
         nueva_contraseña = nueva_contraseña_field.value.strip() if nueva_contraseña_field.value else None
-        repetir_contraseña = repetir_contraseña_field.value.strip() if repetir_contraseña_field else None
+        repetir_contraseña = repetir_contraseña_field.value.strip() if repetir_contraseña_field.value else None
 
+        print(
+            f"CONTRASEÑA ACTUAL: {contraseña_actual}, NUEVA CONTRASEÑA: {nueva_contraseña}, REPETIR CONTRASEÑA: {repetir_contraseña}")
 
+        respuesta = cambiar_contraseña(page, contraseña_actual, nueva_contraseña, repetir_contraseña)
 
-        print(f"CONTRASEÑA ACTUAL: {contraseña_actual}, NUEVA CONTRASEÑA: {nueva_contraseña}, REPETIR CONTRASEÑA: {repetir_contraseña}")
-
-        respuesta= cambiar_contraseña(page, contraseña_actual, nueva_contraseña, repetir_contraseña)
-
-        if respuesta.get("message"):
-            print(respuesta["message"])
-
-
-
-
+        if respuesta.get("success"):
+            mostrar_snackbar("Contraseña cambiada correctamente ", exito=True)
+            page.clean()
+            config_cuenta.main(page)  # volver a la configuración de cuenta
+        else:
+            mostrar_snackbar(respuesta.get("message", "Error al cambiar la contraseña"), exito=False)
 
     #Inicializar los parametros
     contraseña_actual_field = ft.TextField(password=True, can_reveal_password=True,border_radius=8, bgcolor="#E0E0E0", width=600)

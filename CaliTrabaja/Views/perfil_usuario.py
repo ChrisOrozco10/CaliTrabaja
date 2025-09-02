@@ -6,6 +6,9 @@ import config_cuenta
 from CaliTrabaja.API_services.cerrar_sesion import cerrar_sesion_api
 from CaliTrabaja.API_services.datos_clientes import obtener_datos_clientes
 import login
+import usuarios
+import publicaciones
+import reportes
 
 def main(page: ft.Page):
     """
@@ -27,8 +30,6 @@ def main(page: ft.Page):
     text_gray = "#666666"
 
     PRIMARY_COLOR    = "#2FBDB3"     # ← Color turquesa (flechas y otros elementos)
-    BACKGROUND_COLOR = "#FAFAFA"
-    CARD_BACKGROUND  = "#FFFFFF"
     BORDER_COLOR     = "#DDDDDD"
     TEXT_COLOR       = "#333333"
 
@@ -76,21 +77,26 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
@@ -201,9 +207,48 @@ def main(page: ft.Page):
             ],
         ),
     )
-    # ============================
+    # -------------------- Pestañas ----------------------------------------
+    tabs = ft.Container(
+        alignment=ft.alignment.center,
+        content=ft.Row(
+            controls=[
+                ft.TextButton(
+                    text="Usuarios",
+                    on_click=lambda e: usuarios.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Publicaciones",
+                    on_click=lambda e: publicaciones.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+                ft.TextButton(
+                    text="Reportes",
+                    on_click=lambda e: reportes.main(page),
+                    style=ft.ButtonStyle(
+                        color=TEXT_COLOR,
+                        padding=10,
+                        text_style=ft.TextStyle(size=24, font_family="Oswald", weight=ft.FontWeight.BOLD),
+                    ),
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=30,
+        ),
+        border=ft.border.all(1, BORDER_COLOR),
+        border_radius=25,
+        padding=5,
+        margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
+    )
     # FUNCIÓN: ESTRELLAS
-    # ============================
     def estrellas(rating: int):
         return ft.Row(
             [ft.Icon("star", color=star_color, size=14) for _ in range(rating)] +
@@ -212,9 +257,7 @@ def main(page: ft.Page):
             spacing=1
         )
 
-    # ============================
     # TARJETA DE CALIFICACIÓN
-    # ============================
     def tarjeta_calificacion(c: dict):
         return ft.Container(
             width=250,   # ancho compacto
@@ -242,7 +285,6 @@ def main(page: ft.Page):
                         vertical_alignment="center"
 
                     ),
-                    ft.Container(height=20),  # ← separador invisible
                     ft.Text(
                         c["comentario"],
                         size=12,
@@ -257,10 +299,7 @@ def main(page: ft.Page):
 
             )
 
-
-    # ============================
     # PERFIL (IZQUIERDA)
-    # ============================
     perfil_col = ft.Container(
         width=380,
         padding=20,
@@ -296,9 +335,7 @@ def main(page: ft.Page):
         ),
     )
 
-    # ============================
     # CALIFICACIONES (CARRUSEL)
-    # ============================
     carrusel = ft.Row(
         [tarjeta_calificacion(c) for c in calificaciones],
         scroll="hidden",
@@ -340,9 +377,7 @@ def main(page: ft.Page):
         )
     )
 
-    # ============================
     # TARJETA PRINCIPAL (PERFIL + CALIFICACIONES)
-    # ============================
     card_principal = ft.Row(
         [
             perfil_col,
@@ -355,8 +390,7 @@ def main(page: ft.Page):
 
     # PÁGINA
     page.add(
-        header,
-        ft.Divider(color="#CCCCCC", height=1),
+        header,tabs,
         ft.Row(
             [
                 ft.Text(

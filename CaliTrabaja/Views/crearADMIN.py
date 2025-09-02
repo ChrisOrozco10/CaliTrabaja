@@ -44,39 +44,43 @@ def main(page: ft.Page):
         page.drawer.open = True
         page.update()
 
+    def mostrar_snackbar(mensaje, exito=True):
+        """Muestra SnackBar con estilo uniforme"""
+        sb = ft.SnackBar(
+            content=ft.Text(mensaje),
+            bgcolor=ft.Colors.GREEN if exito else ft.Colors.RED,
+            duration=3000
+        )
+        page.overlay.append(sb)
+        sb.open = True
+        page.update()
+
+
+
     def cerrar_sesion(e):
         respuesta = cerrar_sesion_api()
         page.clean()
         login.main(page)
 
         if respuesta.get("success"):
-            page.snack_bar = ft.SnackBar(ft.Text("Sesión cerrada correctamente."), bgcolor="green")
-            page.snack_bar.open = True
-            page.update()
-            # Redirigir al login (si lo tienes)
-            # login.main(page)
+            mostrar_snackbar("Sesión cerrada correctamente.", exito=True)
         else:
-            page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "Error al cerrar sesión")), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
-
-        # ---------------------------------------------------------------
+            mostrar_snackbar(respuesta.get("message", "Error al cerrar sesión"), exito=False)
 
     def conceder_acceso(e):
         correo = correo_field.value.strip()
         if not correo:
-            page.snack_bar = ft.SnackBar(ft.Text("Por favor ingresa un correo."), bgcolor="red")
-            page.snack_bar.open = True
-            page.update()
+            mostrar_snackbar("Por favor ingresa un correo.", exito=False)
             return
 
         # Llamar API
         respuesta = registrar_sesion_api(correo)
 
-        color = "green" if respuesta.get("success") else "red"
-        page.snack_bar = ft.SnackBar(ft.Text(respuesta.get("message", "")), bgcolor=color)
-        page.snack_bar.open = True
-        page.update()
+        if respuesta.get("success"):
+            mostrar_snackbar(respuesta.get("message", "Administrador creado con éxito."), exito=True)
+        else:
+            mostrar_snackbar(respuesta.get("message", "Error al crear administrador."), exito=False)
+
 
     page.drawer = ft.NavigationDrawer(
         bgcolor="#FFFFFF",
@@ -159,7 +163,7 @@ def main(page: ft.Page):
         hint_text="Correo electrónico",
         bgcolor="#F5F5F5",
         border_color="#E0E0E0",
-        text_size=14,
+        text_size=18,
         content_padding=ft.padding.only(left=10, top=0, bottom=0),
         text_style=ft.TextStyle(font_family="Oswald"),
         hint_style=ft.TextStyle(font_family="Oswald"),
@@ -187,7 +191,7 @@ def main(page: ft.Page):
                 ft.Text(
                     "Crear usuario Administrador",
                     color="#2FBDB3",
-                    size=20,
+                    size=22,
                     font_family="Oswald",
                     text_align=ft.TextAlign.CENTER,
                 ),
@@ -195,7 +199,7 @@ def main(page: ft.Page):
                 ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
                     controls=[
-                        ft.Text("@", color="#2FBDB3", size=16, font_family="Oswald"),
+                        ft.Text("@", color="#2FBDB3", size=18, font_family="Oswald"),
                         correo_field
                     ],
                 ),
@@ -203,7 +207,7 @@ def main(page: ft.Page):
                 ft.Text(
                     "Esta acción le concede el acceso del área\nadministrativa al usuario seleccionado.",
                     text_align=ft.TextAlign.CENTER,
-                    size=14,
+                    size=18,
                     color="#757575",
                     font_family="Oswald",
                 ),
@@ -217,7 +221,7 @@ def main(page: ft.Page):
                         side=ft.BorderSide(width=2, color="#2FBDB3"),
                         shape=ft.RoundedRectangleBorder(radius=30),
                         padding=ft.padding.only(left=30, right=30, top=15, bottom=15),
-                        text_style=ft.TextStyle(font_family="Oswald"),
+                        text_style=ft.TextStyle(font_family="Oswald", size=18),
                     ),
                 ),
             ],
