@@ -282,29 +282,41 @@ def main(page: ft.Page):
         ],
     )
 
-    def deshabilitar_cuenta(id, page):
-
+    def deshabilitar_cuenta(usuario_id, page):
         token = obtener_token(page)
         if token is None:
-            print("Token no valido, inicia sesion")
+            sb = ft.SnackBar(
+                content=ft.Text("Token inválido, inicia sesión."),
+                bgcolor=ft.Colors.RED,
+                duration=3000
+            )
+            page.overlay.append(sb)
+            sb.open = True
+            page.update()
+            return
 
-        datos = {}
+        datos = {"usuario_id": usuario_id}
+        respuesta = deshabilitar_cuenta_global(token, datos)
+        print("Respuesta API:", respuesta)
 
-        if id:
-            datos["usuario_id"]= id
+        if respuesta.get("success"):
+            sb = ft.SnackBar(
+                content=ft.Text("La cuenta fue deshabilitada correctamente."),
+                bgcolor=ft.Colors.GREEN,
+                duration=3000
+            )
+            page.overlay.append(sb)
+            sb.open = True
+            cargar_usuarios_iniciales(page)  # <-- refresca tarjetas
+        else:
+            sb = ft.SnackBar(
+                content=ft.Text(respuesta.get("message", "Error al deshabilitar usuario")),
+                bgcolor=ft.Colors.RED,
+                duration=3000
+            )
+            page.overlay.append(sb)
+            sb.open = True
 
-
-        respuesta =   deshabilitar_cuenta_global(token, datos)
-
-        print(respuesta)
-
-        if respuesta.get("success") == True:
-            print("Usuario deshabilitado correctamente")
-
-        else :
-            print("Error al deshabilitar usuario")
-
-        cargar_usuarios_iniciales(page)
         page.update()
 
     def redirigir_por_rol(r, id, page):
@@ -345,19 +357,6 @@ def main(page: ft.Page):
 
         return accion
 
-    def deshabilitar_cuenta(usuario_id, page):
-        # Aquí iría la lógica real para deshabilitar la cuenta en tu backend o base de datos
-        print(f"Cuenta {usuario_id} deshabilitada")
-
-        # Mostrar SnackBar de confirmación
-        sb = ft.SnackBar(
-            content=ft.Text("La cuenta fue deshabilitada correctamente."),
-            bgcolor=ft.Colors.GREEN,
-            duration=3000
-        )
-        page.overlay.append(sb)
-        sb.open = True
-        page.update()
 
     def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating=3):
 

@@ -125,9 +125,6 @@ def main(page: ft.Page):
         sb.open = True
         page.update()
 
-    def cerrar_dialogo(e):
-        page.dialog.open = False
-        page.update()
 
 
 
