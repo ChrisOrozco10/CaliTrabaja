@@ -29,7 +29,7 @@ def main(page: ft.Page):
     text_black = "#000000"
     text_gray = "#666666"
 
-    PRIMARY_COLOR    = "#2FBDB3"     # ← Color turquesa (flechas y otros elementos)
+    PRIMARY_COLOR    = "#2FBDB3"
     BORDER_COLOR     = "#DDDDDD"
     TEXT_COLOR       = "#333333"
 
@@ -55,8 +55,6 @@ def main(page: ft.Page):
 
     def obtener_id(page):
         return getattr(page, "usuario_id", None)
-
-
 
     def close_drawer(e):
         page.drawer.open = False
@@ -145,7 +143,7 @@ def main(page: ft.Page):
         if not token:
             print("Debes iniciar sesion para entrar")
 
-        informacion ={}
+        informacion = {}
 
         if usuario_id:
             informacion["usuario_id"] = usuario_id
@@ -154,11 +152,11 @@ def main(page: ft.Page):
 
         print("Datos", respuesta)
 
-        datos=respuesta.get("clientes", {})
+        datos = respuesta.get("clientes", {})
 
         primer_nombre = datos.get("primer_nombre") or "N/A"
         primer_apellido = datos.get("primer_apellido") or "N/A"
-        direccion = datos.get("direccion") or  "N/A"
+        direccion = datos.get("direccion") or "N/A"
 
         return {
             "nombre_usuario": f"{primer_nombre}  {primer_apellido}",
@@ -167,7 +165,7 @@ def main(page: ft.Page):
 
     datos = procesar_datos_clientes(page)
     if datos:
-        nombre= datos.get("nombre_usuario")
+        nombre = datos.get("nombre_usuario")
         direccion = datos.get("direccion")
 
     print(f"NOMBRE: {nombre}, DIRECCION: {direccion}")
@@ -207,6 +205,7 @@ def main(page: ft.Page):
             ],
         ),
     )
+
     # -------------------- Pestañas ----------------------------------------
     tabs = ft.Container(
         alignment=ft.alignment.center,
@@ -248,19 +247,11 @@ def main(page: ft.Page):
         padding=5,
         margin=ft.margin.only(top=5, bottom=20, left=250, right=250),
     )
-    # FUNCIÓN: ESTRELLAS
-    def estrellas(rating: int):
-        return ft.Row(
-            [ft.Icon("star", color=star_color, size=14) for _ in range(rating)] +
-            [ft.Icon("star_border", color=star_color, size=14) for _ in range(5 - rating)],
-            alignment="start",
-            spacing=1
-        )
 
     # TARJETA DE CALIFICACIÓN
     def tarjeta_calificacion(c: dict):
         return ft.Container(
-            width=250,   # ancho compacto
+            width=250,
             height=200,
             padding=12,
             border=ft.border.all(1, "#333333"),
@@ -271,19 +262,31 @@ def main(page: ft.Page):
                     ft.Row(
                         [
                             ft.CircleAvatar(bgcolor="#EAEAEA", radius=18),
-                            ft.Column([
-                                ft.Text(
-                                    c["nombre"],
-                                    weight="bold",
-                                    size=14,
-                                    color="#000000"
-                                ),
-                                estrellas(c["rating"]),
-                            ], spacing=3)
+                            ft.Column(
+                                [
+                                    ft.Text(
+                                        c["nombre"],
+                                        weight="bold",
+                                        size=14,
+                                        color="#000000"
+                                    ),
+                                    ft.Row(
+                                        [
+                                            ft.Icon(
+                                                name="star",
+                                                color=star_color if i < c["rating"] else "#CCCCCC",
+                                                size=16
+                                            )
+                                            for i in range(5)
+                                        ],
+                                        alignment="start"
+                                    ),
+                                ],
+                                spacing=3
+                            )
                         ],
                         alignment="start",
                         vertical_alignment="center"
-
                     ),
                     ft.Text(
                         c["comentario"],
@@ -295,9 +298,7 @@ def main(page: ft.Page):
                 ],
                 spacing=5
             )
-
-
-            )
+        )
 
     # PERFIL (IZQUIERDA)
     perfil_col = ft.Container(
@@ -309,10 +310,6 @@ def main(page: ft.Page):
                     [
                         ft.Text(nombre, size=22, weight="bold", color=text_black),
                         ft.CircleAvatar(content=ft.Icon(name="person", size=60), radius=40, bgcolor="#26B2B8"),
-                        ft.Row(
-                            [ft.Icon(name="star", color=star_color, size=20) for _ in range(5)],
-                            alignment="center"
-                        )
                     ],
                     alignment="center",
                     spacing=10,
@@ -390,7 +387,7 @@ def main(page: ft.Page):
 
     # PÁGINA
     page.add(
-        header,tabs,
+        header, tabs,
         ft.Row(
             [
                 ft.Text(
@@ -400,8 +397,7 @@ def main(page: ft.Page):
                     color=accent_color
                 )
             ],
-            alignment="center"  # <-- centra el contenido
-
+            alignment="center"
         ),
         ft.Container(height=30),
 
@@ -413,5 +409,3 @@ def main(page: ft.Page):
             expand=True,
         )
     )
-
-

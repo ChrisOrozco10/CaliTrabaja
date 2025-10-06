@@ -338,17 +338,7 @@ def main(page: ft.Page):
 
 
     def tarjeta_publicacion(id_publicacion,usuario_id, rol, nombre, descripcion, costo, categoria, estado_publicacion,  calificacion_estrellas=3):
-        def get_stars(rating):
-            return ft.Row(
-                [
-                    ft.Icon(
-                        name=ft.Icons.STAR if i < rating else ft.Icons.STAR_BORDER,
-                        color="#2FBDB3",
-                        size=16
-                    ) for i in range(5)
-                ],
-                spacing=1
-            )
+
 
         menu_desplegable = ft.PopupMenuButton(
             bgcolor="#FFFFFF",
@@ -403,7 +393,6 @@ def main(page: ft.Page):
                                 spacing=2,
                                 controls=[
                                     ft.Text(nombre, size=22, weight=ft.FontWeight.BOLD, color="#333333"),
-                                    get_stars(calificacion_estrellas),
                                 ]
                             ),
                         ]

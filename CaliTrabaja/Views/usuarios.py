@@ -358,7 +358,7 @@ def main(page: ft.Page):
         return accion
 
 
-    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes, rating=3):
+    def tarjeta_usuario(nombre, rol, categoria, estado, fecha, correo, id_user, publicaciones, reportes):
 
 
         controls = [
@@ -403,12 +403,6 @@ def main(page: ft.Page):
             ft.Text(f"ID: {id_user}", size=18, color="#333333"),
         ]
 
-        if rol:
-            controls.insert(1, ft.Row([
-                ft.Icon(ft.Icons.STAR if i < rating else ft.Icons.STAR_BORDER, color="#2FBDB3", size=24)
-                for i in range(5)
-            ]))
-            controls.insert(2, ft.Text(f"Categoría: {categoria}", size=18, color="#333333"))
 
         return ft.Container(
             bgcolor="#FFFFFF",
