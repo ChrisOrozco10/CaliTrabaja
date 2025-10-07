@@ -275,16 +275,12 @@ def main(page: ft.Page):
             border_radius=100,
             padding=20
         )
-    stars = ft.Row(
-            [ft.Icon(name="star", color=PRIMARY_COLOR, size=20) for _ in range(5)],
-            alignment="center"
-        )
+
 
     left_column = ft.Column(
         [
             ft.Text(nombre_usuario, size=18, weight="bold", color=TEXT_COLOR),
-            profile_image,
-            stars
+            profile_image
         ],
         horizontal_alignment="center",
         spacing=10

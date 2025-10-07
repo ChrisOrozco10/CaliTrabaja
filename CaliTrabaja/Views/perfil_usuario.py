@@ -33,20 +33,7 @@ def main(page: ft.Page):
     BORDER_COLOR     = "#DDDDDD"
     TEXT_COLOR       = "#333333"
 
-    # ============================
-    # DATOS DE EJEMPLO DEL CARRUSEL
-    # ============================
-    calificaciones = [
-        dict(nombre="Angela Martínez", rating=5,
-             comentario="Excelente trabajador, cumplió con todas sus responsabilidades, muy puntual."),
 
-        dict(nombre="Carlos Pérez", rating=3,
-             comentario="Buen trabajo en general, aunque tardó un poco más de lo esperado."),
-
-        dict(nombre="María García", rating=4, comentario="Muy responsable y dedicada en su labor."),
-
-        dict(nombre="Juan Rodríguez", rating=2, comentario="Debe mejorar en puntualidad."),
-    ]
 
     # -------------------- Drawer ------------------------------------------
 
@@ -157,18 +144,27 @@ def main(page: ft.Page):
         primer_nombre = datos.get("primer_nombre") or "N/A"
         primer_apellido = datos.get("primer_apellido") or "N/A"
         direccion = datos.get("direccion") or "N/A"
+        calificaciones = datos.get("calificaciones", [])
+
 
         return {
             "nombre_usuario": f"{primer_nombre}  {primer_apellido}",
-            "direccion": direccion
+            "direccion": direccion,
+            "calificaciones": calificaciones
         }
 
     datos = procesar_datos_clientes(page)
     if datos:
         nombre = datos.get("nombre_usuario")
         direccion = datos.get("direccion")
+        calificaciones = datos.get("calificaciones", [])
 
-    print(f"NOMBRE: {nombre}, DIRECCION: {direccion}")
+    else:
+        nombre = "Usuario"
+        direccion = "Sin dirección"
+        calificaciones = []
+
+    print(f"NOMBRE: {nombre}, DIRECCION: {direccion}, CALIFICACIONES: {calificaciones}")
 
     # -------------------- Encabezado --------------------------------------
     header = ft.Container(
@@ -265,7 +261,7 @@ def main(page: ft.Page):
                             ft.Column(
                                 [
                                     ft.Text(
-                                        c["nombre"],
+                                        c.get("calificado_nombre", "Usuario"),
                                         weight="bold",
                                         size=14,
                                         color="#000000"
@@ -274,7 +270,7 @@ def main(page: ft.Page):
                                         [
                                             ft.Icon(
                                                 name="star",
-                                                color=star_color if i < c["rating"] else "#CCCCCC",
+                                                color=star_color if i < c.get("puntaje", 0) else "#CCCCCC",
                                                 size=16
                                             )
                                             for i in range(5)
@@ -289,7 +285,7 @@ def main(page: ft.Page):
                         vertical_alignment="center"
                     ),
                     ft.Text(
-                        c["comentario"],
+                        c.get("reseña", "No tienes resñas"),
                         size=12,
                         color="#000000",
                         max_lines=3,
@@ -332,21 +328,33 @@ def main(page: ft.Page):
         ),
     )
 
-    # CALIFICACIONES (CARRUSEL)
-    carrusel = ft.Row(
-        [tarjeta_calificacion(c) for c in calificaciones],
-        scroll="hidden",
-        height=220,
-        expand=True,
-        alignment="start",
-        spacing=20
-    )
+    if calificaciones:
+        carrusel_contenido = ft.Row(
+            [tarjeta_calificacion(c) for c in calificaciones],
+            scroll="hidden",
+            height=220,
+            expand=True,
+            alignment="start",
+            spacing=20
+        )
+    else:
+        carrusel_contenido = ft.Container(
+            alignment=ft.alignment.center,
+            padding=20,
+            content=ft.Text(
+                "📝 Aún no has recibido ninguna calificación.",
+                size=16,
+                color="#666666",
+                weight=ft.FontWeight.W_500,
+                text_align="center"
+            )
+        )
 
     def mover_carrusel(direccion: str):
         if direccion == "izq":
-            carrusel.scroll_to(delta=-300, duration=400)
+            carrusel_contenido.scroll_to(delta=-300, duration=400)
         elif direccion == "der":
-            carrusel.scroll_to(delta=300, duration=400)
+            carrusel_contenido.scroll_to(delta=300, duration=400)
 
     calif_seccion = ft.Container(
         expand=True,
@@ -362,7 +370,7 @@ def main(page: ft.Page):
                     ft.Row(
                         [
                             ft.IconButton("chevron_left", on_click=lambda _: mover_carrusel("izq"), icon_color=accent_color),
-                            ft.Container(content=carrusel, expand=True),
+                            ft.Container(content=carrusel_contenido, expand=True),
                             ft.IconButton("chevron_right", on_click=lambda _: mover_carrusel("der"), icon_color=accent_color),
                         ],
                         alignment="center",
@@ -409,3 +417,5 @@ def main(page: ft.Page):
             expand=True,
         )
     )
+    ft.Container(content=carrusel_contenido, expand=True),
+
