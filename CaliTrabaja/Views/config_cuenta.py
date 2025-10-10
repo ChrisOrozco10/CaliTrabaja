@@ -174,7 +174,7 @@ def main(page: ft.Page):
             content=ft.Column(
                 controls=[
                     ft.Text(f"Nombre de usuario:{primer_nombre} {primer_apellido}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
-                    ft.Text(f"Se unio el: {fecha_union}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
+                    ft.Text(f"Se unio en {fecha_union}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
                     ft.Text(f"Rol actual: {rol_usuario}", size=20, weight=ft.FontWeight.BOLD, color=TEXT_COLOR, font_family="Oswald"),
                 ]
             )
