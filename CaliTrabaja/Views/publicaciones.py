@@ -344,6 +344,7 @@ def main(page: ft.Page):
             bgcolor="#FFFFFF",
             icon=ft.Icons.MORE_HORIZ,
             icon_color="#333333",
+            tooltip="Mostrar menú",
             items=[
                 ft.PopupMenuItem(
                     content=ft.Row(
